@@ -254,6 +254,40 @@
   .address-form input{ width:100%; background:var(--panel-light); border:none; outline:none; border-radius:12px; padding:11px 13px; color:var(--text); font-size:13px; font-family:'Inter'; margin-bottom:8px; }
   .address-form input::placeholder{ color:var(--text-dim); }
 
+  /* Auth screen */
+  .auth-screen{ position:absolute; inset:0; z-index:200; background:var(--bg); display:flex; flex-direction:column; padding:54px 24px 30px; overflow-y:auto; }
+  .auth-screen.hidden{ display:none; }
+  .auth-logo{ text-align:center; margin-bottom:6px; font-family:'Space Grotesk'; font-size:24px; font-weight:700; }
+  .auth-logo span:first-child{ color:var(--accent); }
+  .auth-logo span:last-child{ color:var(--text); opacity:0.55; }
+  .auth-sub{ text-align:center; color:var(--text-dim); font-size:12.5px; margin-bottom:26px; }
+  .auth-tabs{ display:flex; background:var(--panel); border-radius:14px; padding:4px; margin-bottom:22px; }
+  .auth-tab{ flex:1; text-align:center; padding:10px; border-radius:11px; font-size:13px; font-weight:700; cursor:pointer; color:var(--text-dim); }
+  .auth-tab.active{ background:var(--accent); color:#fff; }
+  .auth-field-label{ font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:6px; display:block; }
+  .auth-input{ width:100%; background:var(--panel); border:1.5px solid transparent; outline:none; border-radius:14px; padding:14px 16px; color:var(--text); font-size:14px; font-family:'Inter'; margin-bottom:16px; }
+  .auth-input:focus{ border-color:var(--accent); }
+  .auth-input::placeholder{ color:var(--text-dim); }
+  .auth-primary-btn{ background:var(--accent); text-align:center; padding:15px; border-radius:16px; font-weight:700; font-size:14px; cursor:pointer; margin-top:4px; box-shadow:0 8px 24px -8px rgba(255,77,109,0.6); }
+  .auth-guest-link{ text-align:center; margin-top:24px; font-size:12.5px; color:var(--text-dim); text-decoration:underline; cursor:pointer; }
+  .auth-view{ display:none; }
+  .auth-view.active{ display:block; }
+  .auth-error{ color:var(--accent); font-size:12px; margin:-10px 0 14px; display:none; }
+  .auth-error.show{ display:block; }
+  .verify-code-banner{ background:var(--accent-dim); color:var(--accent); font-size:12px; font-weight:600; padding:12px 14px; border-radius:12px; margin-bottom:20px; text-align:center; line-height:1.5; }
+  .verify-digits{ display:flex; gap:8px; justify-content:center; margin-bottom:20px; }
+  .verify-digit{ width:42px; height:52px; text-align:center; font-size:19px; font-weight:700; background:var(--panel); border:1.5px solid transparent; border-radius:12px; color:var(--text); outline:none; }
+  .verify-digit:focus{ border-color:var(--accent); }
+  .resend-link{ text-align:center; font-size:12px; color:var(--text-dim); margin-top:14px; }
+  .resend-link b{ color:var(--accent); cursor:pointer; }
+
+  /* Profile guest state */
+  .profile-guest-card{ text-align:center; padding:70px 12px; }
+  .profile-guest-icon{ width:60px; height:60px; border-radius:20px; background:var(--panel); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .profile-guest-title{ font-size:15px; font-weight:700; margin-bottom:6px; }
+  .profile-guest-sub{ font-size:12.5px; color:var(--text-dim); margin-bottom:22px; }
+  .profile-guest-actions{ display:flex; gap:10px; }
+
   /* Toast */
   .toast{ position:absolute; top:70px; left:50%; transform:translateX(-50%) translateY(-20px); z-index:120; background:var(--success); color:#0F2E17; font-size:13px; font-weight:700; padding:10px 18px; border-radius:20px; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; display:flex; align-items:center; gap:6px; white-space:nowrap; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
@@ -271,6 +305,54 @@
   <div class="phone">
     <div class="screen">
       <div class="notch"></div>
+
+      <!-- Auth screen (login / signup / verify) -->
+      <div class="auth-screen" id="authScreen">
+        <div class="auth-logo"><span>kaydır</span><span>kaydır</span></div>
+        <div class="auth-sub" id="authSubtitle">Video izle, beğen, anında satın al</div>
+
+        <div class="auth-tabs">
+          <div class="auth-tab active" id="authTabLogin">Giriş Yap</div>
+          <div class="auth-tab" id="authTabSignup">Kayıt Ol</div>
+        </div>
+
+        <div class="auth-view active" id="authViewLogin">
+          <label class="auth-field-label" id="loginEmailLabel">E-posta</label>
+          <input type="email" class="auth-input" id="loginEmail" placeholder="ornek@mail.com">
+          <label class="auth-field-label" id="loginPwLabel">Şifre</label>
+          <input type="password" class="auth-input" id="loginPassword" placeholder="••••••••">
+          <div class="auth-error" id="loginError">Lütfen e-posta ve şifreni gir.</div>
+          <div class="auth-primary-btn" id="loginSubmitBtn">Giriş Yap</div>
+        </div>
+
+        <div class="auth-view" id="authViewSignup">
+          <label class="auth-field-label" id="signupNameLabel">Ad Soyad</label>
+          <input type="text" class="auth-input" id="signupName" placeholder="Adın Soyadın">
+          <label class="auth-field-label" id="signupEmailLabel">E-posta</label>
+          <input type="email" class="auth-input" id="signupEmail" placeholder="ornek@mail.com">
+          <label class="auth-field-label" id="signupPwLabel">Şifre</label>
+          <input type="password" class="auth-input" id="signupPassword" placeholder="En az 6 karakter">
+          <div class="auth-error" id="signupError">Lütfen tüm alanları doldur (şifre en az 6 karakter).</div>
+          <div class="auth-primary-btn" id="signupSubmitBtn">Hesap Oluştur</div>
+        </div>
+
+        <div class="auth-view" id="authViewVerify">
+          <div class="verify-code-banner">E-posta doğrulama kodu <span id="verifyEmailTarget">...</span> adresine gönderildi<br>Demo kodu: <b id="demoCode">000000</b></div>
+          <div class="verify-digits">
+            <input maxlength="1" inputmode="numeric" class="verify-digit" data-idx="0">
+            <input maxlength="1" inputmode="numeric" class="verify-digit" data-idx="1">
+            <input maxlength="1" inputmode="numeric" class="verify-digit" data-idx="2">
+            <input maxlength="1" inputmode="numeric" class="verify-digit" data-idx="3">
+            <input maxlength="1" inputmode="numeric" class="verify-digit" data-idx="4">
+            <input maxlength="1" inputmode="numeric" class="verify-digit" data-idx="5">
+          </div>
+          <div class="auth-error" id="verifyError">Kod hatalı, tekrar dene.</div>
+          <div class="auth-primary-btn" id="verifySubmitBtn">Doğrula</div>
+          <div class="resend-link">Kod gelmedi mi? <b id="resendCodeBtn">Tekrar gönder</b></div>
+        </div>
+
+        <div class="auth-guest-link" id="guestBrowseBtn">Misafir olarak gezin</div>
+      </div>
 
       <div class="topbar" id="topbar">
         <div class="wordmark"><span>kaydır</span><span>kaydır</span></div>
@@ -304,13 +386,13 @@
 
         <div class="tab-view" id="tab-cart">
           <div class="cart-view">
-            <div class="view-title">Sepetim</div>
+            <div class="view-title" id="txtCartTitle">Sepetim</div>
             <div id="cartList"></div>
             <div id="cartEmpty" class="empty-state" style="display:none;">Sepetin şu an boş — akıştan ürün ekleyerek başla 🛍️</div>
             <div class="cart-summary" id="cartSummary" style="display:none;">
-              <div class="summary-row"><span>Ara Toplam</span><span id="sumSubtotal">₺0</span></div>
-              <div class="summary-row"><span>Kargo</span><span id="sumShipping">₺49,90</span></div>
-              <div class="summary-row total"><span>Toplam</span><span id="sumTotal">₺0</span></div>
+              <div class="summary-row"><span id="txtSubtotal">Ara Toplam</span><span id="sumSubtotal">₺0</span></div>
+              <div class="summary-row"><span id="txtShippingLabel">Kargo</span><span id="sumShipping">₺49,90</span></div>
+              <div class="summary-row total"><span id="txtTotalLabel">Toplam</span><span id="sumTotal">₺0</span></div>
               <div class="checkout-btn" id="checkoutBtn">Ödemeye Geç</div>
             </div>
           </div>
@@ -318,36 +400,49 @@
 
         <div class="tab-view" id="tab-profile">
           <div class="profile-view">
+            <div id="profileGuestView" style="display:none;">
+              <div class="profile-guest-card">
+                <div class="profile-guest-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                <div class="profile-guest-title" id="txtGuestTitle">Henüz giriş yapmadın</div>
+                <div class="profile-guest-sub" id="txtGuestSub">Siparişlerini, favorilerini ve takip ettiklerini görmek için hesabına giriş yap</div>
+                <div class="profile-guest-actions">
+                  <div class="btn-secondary" id="guestLoginBtn" style="flex:1;">Giriş Yap</div>
+                  <div class="btn-primary" id="guestSignupBtn" style="flex:1;">Kayıt Ol</div>
+                </div>
+              </div>
+            </div>
+            <div id="profileLoggedInView">
             <div class="profile-head">
               <div class="profile-avatar" id="profileAvatarBtn">
                 <span id="profileAvatarInitials">EY</span>
                 <div class="avatar-cam-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F0B1A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
               </div>
               <div>
-                <div class="profile-name">Elif Yılmaz</div>
-                <div class="profile-sub">elif.yilmaz@mail.com</div>
+                <div class="profile-name" id="profileNameDisplay">Elif Yılmaz</div>
+                <div class="profile-sub" id="profileEmailDisplay">elif.yilmaz@mail.com</div>
               </div>
             </div>
             <div class="stat-row">
-              <div class="stat-box" id="statOrdersBox"><div class="stat-num" id="statOrders">3</div><div class="stat-label">Sipariş</div></div>
-              <div class="stat-box" id="statFavsBox"><div class="stat-num" id="statFavs">0</div><div class="stat-label">Favori</div></div>
-              <div class="stat-box" id="statFollowBox"><div class="stat-num" id="statFollow">0</div><div class="stat-label">Takip</div></div>
+              <div class="stat-box" id="statOrdersBox"><div class="stat-num" id="statOrders">3</div><div class="stat-label" id="txtStatOrders">Sipariş</div></div>
+              <div class="stat-box" id="statFavsBox"><div class="stat-num" id="statFavs">0</div><div class="stat-label" id="txtStatFavs">Favori</div></div>
+              <div class="stat-box" id="statFollowBox"><div class="stat-num" id="statFollow">0</div><div class="stat-label" id="txtStatFollow">Takip</div></div>
             </div>
             <div class="menu-item" id="menuFavs">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-              Favorilerim <span class="arrow">›</span>
+              <span id="txtMenuFavs">Favorilerim</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuOrders">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7L12 3 4 7v10l8 4 8-4V7z"/><line x1="12" y1="22" x2="12" y2="12"/><line x1="20" y1="7" x2="12" y2="12"/><line x1="4" y1="7" x2="12" y2="12"/></svg>
-              Siparişlerim <span class="arrow">›</span>
+              <span id="txtMenuOrders">Siparişlerim</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuAddr">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Adreslerim <span class="arrow">›</span>
+              <span id="txtMenuAddr">Adreslerim</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuSettings">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              Ayarlar <span class="arrow">›</span>
+              <span id="txtMenuSettings">Ayarlar</span> <span class="arrow">›</span>
+            </div>
             </div>
           </div>
         </div>
@@ -356,20 +451,20 @@
       <div class="bottomnav">
         <div class="nav-item active" data-tab="feed">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-          Akış
+          <span id="navLabelFeed">Akış</span>
         </div>
         <div class="nav-item" data-tab="search">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Keşfet
+          <span id="navLabelSearch">Keşfet</span>
         </div>
         <div class="nav-item" data-tab="cart" style="position:relative;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          Sepetim
+          <span id="navLabelCart">Sepetim</span>
           <div class="nav-badge" id="navCartBadge" style="display:none;">0</div>
         </div>
         <div class="nav-item" data-tab="profile">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Profil
+          <span id="navLabelProfile">Profil</span>
         </div>
       </div>
 
@@ -387,9 +482,9 @@
             <div class="sheet-price" id="sheetPrice">₺0</div>
           </div>
         </div>
-        <div class="field-label">Beden</div>
+        <div class="field-label" id="txtSizeLabel">Beden</div>
         <div class="option-row" id="sizeRow"></div>
-        <div class="field-label">Adet</div>
+        <div class="field-label" id="txtQtyLabel">Adet</div>
         <div class="qty-row">
           <div class="qty-btn" id="qtyMinus">−</div>
           <div class="qty-val" id="qtyVal">1</div>
@@ -417,11 +512,11 @@
       <!-- Share sheet -->
       <div class="sheet" id="shareSheet">
         <div class="sheet-handle"></div>
-        <div class="comment-sheet-title">Paylaş</div>
+        <div class="comment-sheet-title" id="txtShareTitle">Paylaş</div>
         <div class="share-options">
           <div class="share-opt" id="shareCopy">
             <div class="share-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
-            Bağlantıyı Kopyala
+            <span id="txtShareCopy">Bağlantıyı Kopyala</span>
           </div>
           <div class="share-opt" id="shareWhatsapp">
             <div class="share-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
@@ -429,7 +524,7 @@
           </div>
           <div class="share-opt" id="shareMore">
             <div class="share-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></div>
-            Diğer
+            <span id="txtShareMore">Diğer</span>
           </div>
         </div>
       </div>
@@ -445,43 +540,43 @@
           </div>
           <div class="follow-btn" id="followBtn">Takip Et</div>
         </div>
-        <div class="field-label">Ürünleri</div>
+        <div class="field-label" id="txtSellerProductsLabel">Ürünleri</div>
         <div class="seller-products" id="sellerProducts"></div>
       </div>
 
       <!-- Orders sheet -->
       <div class="sheet" id="ordersSheet">
         <div class="sheet-handle"></div>
-        <div class="comment-sheet-title">Siparişlerim</div>
+        <div class="comment-sheet-title" id="txtOrdersTitle">Siparişlerim</div>
         <div id="ordersList"></div>
       </div>
 
       <!-- Following sheet -->
       <div class="sheet" id="followingSheet">
         <div class="sheet-handle"></div>
-        <div class="comment-sheet-title">Takip Ettiklerim</div>
+        <div class="comment-sheet-title" id="txtFollowingTitle">Takip Ettiklerim</div>
         <div id="followingList"></div>
       </div>
 
       <!-- Avatar picker sheet -->
       <div class="sheet" id="avatarSheet">
         <div class="sheet-handle"></div>
-        <div class="comment-sheet-title">Profil Fotoğrafı</div>
+        <div class="comment-sheet-title" id="txtAvatarTitle">Profil Fotoğrafı</div>
         <div class="avatar-picker-row">
           <div class="avatar-upload-btn" id="avatarUploadBtn">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Galeriden Seç
+            <span id="txtGallery">Galeriden Seç</span>
           </div>
         </div>
         <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
-        <div class="field-label">Hazır Avatarlar</div>
+        <div class="field-label" id="txtPresetsLabel">Hazır Avatarlar</div>
         <div class="avatar-presets" id="avatarPresets"></div>
       </div>
 
       <!-- Addresses sheet -->
       <div class="sheet" id="addressSheet">
         <div class="sheet-handle"></div>
-        <div class="comment-sheet-title">Adreslerim</div>
+        <div class="comment-sheet-title" id="txtAddressTitle">Adreslerim</div>
         <div id="addressList"></div>
         <div class="address-form" id="addressForm">
           <input type="text" id="addrLabelInput" placeholder="Adres başlığı (ör. Ev, İş)">
@@ -491,48 +586,58 @@
             <div class="btn-primary" id="saveAddrBtn">Kaydet</div>
           </div>
         </div>
-        <div class="add-address-btn" id="addAddressBtn">+ Yeni Adres Ekle</div>
+        <div class="add-address-btn" id="addAddressBtn">+ <span id="txtAddAddress">Yeni Adres Ekle</span></div>
       </div>
 
       <!-- Settings sheet -->
       <div class="sheet" id="settingsSheet">
         <div class="sheet-handle"></div>
-        <div class="comment-sheet-title">Ayarlar</div>
+        <div class="comment-sheet-title" id="txtSettingsTitle">Ayarlar</div>
         <div class="settings-row">
           <div>
-            <div class="settings-label">Anlık Bildirimler</div>
-            <div class="settings-sub">Sipariş ve kampanya bildirimleri</div>
+            <div class="settings-label" id="txtNotifLabel">Anlık Bildirimler</div>
+            <div class="settings-sub" id="txtNotifSub">Sipariş ve kampanya bildirimleri</div>
           </div>
           <div class="toggle on" id="toggleNotif"></div>
         </div>
         <div class="settings-row">
           <div>
-            <div class="settings-label">E-posta Bildirimleri</div>
-            <div class="settings-sub">Fatura ve kargo güncellemeleri</div>
+            <div class="settings-label" id="txtEmailLabel">E-posta Bildirimleri</div>
+            <div class="settings-sub" id="txtEmailSub">Fatura ve kargo güncellemeleri</div>
           </div>
           <div class="toggle on" id="toggleEmail"></div>
         </div>
         <div class="settings-row">
           <div>
-            <div class="settings-label">Kişiselleştirilmiş Öneriler</div>
-            <div class="settings-sub">Beğeni ve satın alma verine göre akış</div>
+            <div class="settings-label" id="txtRecoLabel">Kişiselleştirilmiş Öneriler</div>
+            <div class="settings-sub" id="txtRecoSub">Beğeni ve satın alma verine göre akış</div>
           </div>
           <div class="toggle on" id="toggleReco"></div>
         </div>
         <div class="settings-row" id="menuChangePw" style="cursor:pointer;">
           <div>
-            <div class="settings-label">Şifreyi Değiştir</div>
+            <div class="settings-label" id="txtChangePwLabel">Şifreyi Değiştir</div>
           </div>
           <span class="arrow" style="color:var(--text-dim); font-size:16px;">›</span>
         </div>
         <div class="settings-row" id="menuLang" style="cursor:pointer;">
           <div>
-            <div class="settings-label">Dil</div>
+            <div class="settings-label" id="txtLangLabel">Dil</div>
             <div class="settings-sub" id="langValue">Türkçe</div>
           </div>
           <span class="arrow" style="color:var(--text-dim); font-size:16px;">›</span>
         </div>
         <div class="logout-btn" id="logoutBtn">Çıkış Yap</div>
+      </div>
+
+      <!-- Language picker sheet -->
+      <div class="sheet" id="langSheet">
+        <div class="sheet-handle"></div>
+        <div class="comment-sheet-title" id="txtLangPickerTitle">Dil Seç</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="option lang-option" data-lang="tr" style="text-align:center; padding:14px;">Türkçe</div>
+          <div class="option lang-option" data-lang="en" style="text-align:center; padding:14px;">English</div>
+        </div>
       </div>
 
     </div>
@@ -550,8 +655,192 @@ const products = [
   { id:6, seller:'Studio Kumaş', category:'Elektronik', caption:'7 gün pil ömürlü, su geçirmez akıllı saat ⌚', img:'https://picsum.photos/seed/kk-watch/500/900', name:'Pulse Akıllı Saat', price:2149, sizes:['Standart'], avatar:'https://picsum.photos/seed/seller4/100/100', likes:963 },
 ];
 
-const currentUser = { username: 'elif.yilmaz', name: 'Elif Yılmaz' };
+const currentUser = { username: 'elif.yilmaz', name: 'Elif Yılmaz', initials: 'EY' };
 let profileAvatarUrl = null;
+let currentLang = 'tr';
+
+const STATIC_TEXT = {
+  navLabelFeed: ['Akış','Feed'], navLabelSearch: ['Keşfet','Discover'], navLabelCart: ['Sepetim','Cart'], navLabelProfile: ['Profil','Profile'],
+  txtCartTitle: ['Sepetim','My Cart'], txtSubtotal: ['Ara Toplam','Subtotal'], txtShippingLabel: ['Kargo','Shipping'], txtTotalLabel: ['Toplam','Total'], checkoutBtn: ['Ödemeye Geç','Checkout'],
+  txtStatOrders: ['Sipariş','Orders'], txtStatFavs: ['Favori','Favorites'], txtStatFollow: ['Takip','Following'],
+  txtMenuFavs: ['Favorilerim','Favorites'], txtMenuOrders: ['Siparişlerim','My Orders'], txtMenuAddr: ['Adreslerim','My Addresses'], txtMenuSettings: ['Ayarlar','Settings'],
+  txtSizeLabel: ['Beden','Size'], txtQtyLabel: ['Adet','Quantity'], closeSheetBtn: ['Kapat','Close'], addToCartBtn: ['Sepete Ekle','Add to Cart'],
+  txtShareTitle: ['Paylaş','Share'], txtShareCopy: ['Bağlantıyı Kopyala','Copy Link'], txtShareMore: ['Diğer','More'],
+  txtSellerProductsLabel: ['Ürünleri','Products'],
+  txtOrdersTitle: ['Siparişlerim','My Orders'], txtFollowingTitle: ['Takip Ettiklerim','Following'],
+  txtAvatarTitle: ['Profil Fotoğrafı','Profile Photo'], txtGallery: ['Galeriden Seç','Choose from Gallery'], txtPresetsLabel: ['Hazır Avatarlar','Preset Avatars'],
+  txtAddressTitle: ['Adreslerim','My Addresses'], cancelAddrBtn: ['Vazgeç','Cancel'], saveAddrBtn: ['Kaydet','Save'], txtAddAddress: ['Yeni Adres Ekle','Add New Address'],
+  txtSettingsTitle: ['Ayarlar','Settings'],
+  txtNotifLabel: ['Anlık Bildirimler','Push Notifications'], txtNotifSub: ['Sipariş ve kampanya bildirimleri','Order and promo alerts'],
+  txtEmailLabel: ['E-posta Bildirimleri','Email Notifications'], txtEmailSub: ['Fatura ve kargo güncellemeleri','Invoice and shipping updates'],
+  txtRecoLabel: ['Kişiselleştirilmiş Öneriler','Personalized Recommendations'], txtRecoSub: ['Beğeni ve satın alma verine göre akış','Feed based on your likes and purchases'],
+  txtChangePwLabel: ['Şifreyi Değiştir','Change Password'], txtLangLabel: ['Dil','Language'], logoutBtn: ['Çıkış Yap','Log Out'], txtLangPickerTitle: ['Dil Seç','Select Language'],
+  txtGuestTitle: ['Henüz giriş yapmadın','You are not signed in yet'], txtGuestSub: ['Siparişlerini, favorilerini ve takip ettiklerini görmek için hesabına giriş yap','Sign in to see your orders, favorites and following'],
+  guestLoginBtn: ['Giriş Yap','Log In'], guestSignupBtn: ['Kayıt Ol','Sign Up'],
+  authSubtitle: ['Video izle, beğen, anında satın al','Watch, like, and buy instantly'],
+  authTabLogin: ['Giriş Yap','Log In'], authTabSignup: ['Kayıt Ol','Sign Up'],
+  loginSubmitBtn: ['Giriş Yap','Log In'], signupSubmitBtn: ['Hesap Oluştur','Create Account'],
+  verifySubmitBtn: ['Doğrula','Verify'], guestBrowseBtn: ['Misafir olarak gezin','Browse as guest'],
+  loginEmailLabel: ['E-posta','Email'], loginPwLabel: ['Şifre','Password'],
+  signupNameLabel: ['Ad Soyad','Full Name'], signupEmailLabel: ['E-posta','Email'], signupPwLabel: ['Şifre','Password'],
+};
+const PLACEHOLDER_TEXT = {
+  searchInput: ['Ürün ya da marka ara...','Search products or brands...'],
+  commentInput: ['Yorum yaz...','Write a comment...'],
+  addrLabelInput: ['Adres başlığı (ör. Ev, İş)','Address label (e.g. Home, Work)'],
+  addrDetailInput: ['Açık adres','Full address'],
+  loginEmail: ['ornek@mail.com','name@example.com'], signupEmail: ['ornek@mail.com','name@example.com'],
+  signupName: ['Adın Soyadın','Your full name'], signupPassword: ['En az 6 karakter','At least 6 characters'],
+};
+const DYN = {
+  tr: { qty:'Adet', delivered:'Teslim Edildi', transit:'Yolda', items:(n)=>`${n} ürün`, unfollow:'Takibi Bırak', noFollowing:'Henüz kimseyi takip etmiyorsun', follow:'Takip Et', following:'Takip Ediliyor', sellerStats:(n,l)=>`${n} ürün · ${l.toLocaleString('tr-TR')} beğeni`, noResults:'Aradığın ürün bulunamadı 🔍', noFavorites:'Henüz favori ürünün yok 💜', cartEmpty:'Sepetin şu an boş — akıştan ürün ekleyerek başla 🛍️', browse:'İncele', swipe:'kaydır', all:'Tümü' },
+  en: { qty:'Qty', delivered:'Delivered', transit:'In Transit', items:(n)=>`${n} item${n>1?'s':''}`, unfollow:'Unfollow', noFollowing:"You're not following anyone yet", follow:'Follow', following:'Following', sellerStats:(n,l)=>`${n} products · ${l.toLocaleString('en-US')} likes`, noResults:'No matching products found 🔍', noFavorites:'No favorites yet 💜', cartEmpty:'Your cart is empty — add something from the feed 🛍️', browse:'View', swipe:'swipe', all:'All' },
+};
+function t(key, ...args){ const v = DYN[currentLang][key]; return typeof v === 'function' ? v(...args) : v; }
+
+function applyLanguage(lang){
+  currentLang = lang;
+  document.getElementById('langValue').textContent = lang === 'tr' ? 'Türkçe' : 'English';
+  Object.entries(STATIC_TEXT).forEach(([id, [tr, en]]) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = lang === 'tr' ? tr : en;
+  });
+  Object.entries(PLACEHOLDER_TEXT).forEach(([id, [tr, en]]) => {
+    const el = document.getElementById(id);
+    if(el) el.placeholder = lang === 'tr' ? tr : en;
+  });
+  document.querySelectorAll('.chip-cta').forEach(el => el.textContent = t('browse'));
+  const hint = document.querySelector('.swipe-hint span');
+  if(hint) hint.textContent = t('swipe');
+  if(catChipsEl && catChipsEl.firstChild) catChipsEl.firstChild.textContent = t('all');
+  // Re-render any currently visible dynamic content so it picks up the new language
+  if(currentTab === 'cart') renderCart();
+  if(currentTab === 'search') renderGrid();
+  if(openSheetName === 'orders') renderOrders();
+  if(openSheetName === 'following') renderFollowing();
+  if(openSheetName === 'comment') renderComments();
+}
+
+/* ============ AUTH SYSTEM ============ */
+let authState = { loggedIn: false, user: null };
+let pendingSignup = null;
+let demoVerifyCode = '';
+
+function initialsFromName(name){
+  return name.trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function showAuthTab(tabName){
+  document.getElementById('authTabLogin').classList.toggle('active', tabName === 'login');
+  document.getElementById('authTabSignup').classList.toggle('active', tabName === 'signup');
+  document.getElementById('authViewLogin').classList.toggle('active', tabName === 'login');
+  document.getElementById('authViewSignup').classList.toggle('active', tabName === 'signup');
+  document.getElementById('authViewVerify').classList.remove('active');
+  document.querySelector('.auth-tabs').style.display = 'flex';
+}
+document.getElementById('authTabLogin').addEventListener('click', () => showAuthTab('login'));
+document.getElementById('authTabSignup').addEventListener('click', () => showAuthTab('signup'));
+
+function openAuthScreen(mode, message){
+  document.getElementById('authScreen').classList.remove('hidden');
+  showAuthTab(mode || 'login');
+  if(message) showToast(message);
+}
+function closeAuthScreen(){
+  document.getElementById('authScreen').classList.add('hidden');
+}
+function requireAuth(action){
+  if(authState.loggedIn){ action(); }
+  else { openAuthScreen('login', currentLang === 'tr' ? 'Devam etmek için giriş yap' : 'Sign in to continue'); }
+}
+
+document.getElementById('guestBrowseBtn').addEventListener('click', closeAuthScreen);
+document.getElementById('guestLoginBtn').addEventListener('click', () => openAuthScreen('login'));
+document.getElementById('guestSignupBtn').addEventListener('click', () => openAuthScreen('signup'));
+
+function completeLogin(user){
+  authState.loggedIn = true;
+  authState.user = user;
+  currentUser.name = user.name;
+  currentUser.username = user.email.split('@')[0];
+  currentUser.initials = initialsFromName(user.name);
+  document.getElementById('profileNameDisplay').textContent = user.name;
+  document.getElementById('profileEmailDisplay').textContent = user.email;
+  document.getElementById('profileAvatarInitials').textContent = currentUser.initials;
+  document.getElementById('profileAvatarInitials').style.display = 'flex';
+  document.getElementById('profileAvatarBtn').style.backgroundImage = '';
+  profileAvatarUrl = null;
+  closeAuthScreen();
+  renderProfileGuestState();
+}
+
+document.getElementById('loginSubmitBtn').addEventListener('click', () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPassword').value.trim();
+  const err = document.getElementById('loginError');
+  if(!email || !pw){ err.classList.add('show'); return; }
+  err.classList.remove('show');
+  const name = email.split('@')[0].replace(/[._]+/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  completeLogin({ name, email });
+  showToast((currentLang === 'tr' ? 'Tekrar hoş geldin, ' : 'Welcome back, ') + name.split(' ')[0] + '!');
+});
+
+document.getElementById('signupSubmitBtn').addEventListener('click', () => {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pw = document.getElementById('signupPassword').value.trim();
+  const err = document.getElementById('signupError');
+  if(!name || !email || pw.length < 6){ err.classList.add('show'); return; }
+  err.classList.remove('show');
+  pendingSignup = { name, email, password: pw };
+  demoVerifyCode = String(Math.floor(100000 + Math.random() * 900000));
+  document.getElementById('verifyEmailTarget').textContent = email;
+  document.getElementById('demoCode').textContent = demoVerifyCode;
+  document.querySelectorAll('.verify-digit').forEach(d => d.value = '');
+  document.querySelector('.auth-tabs').style.display = 'none';
+  document.getElementById('authViewSignup').classList.remove('active');
+  document.getElementById('authViewVerify').classList.add('active');
+  document.querySelector('.verify-digit[data-idx="0"]').focus();
+});
+
+const verifyDigits = [...document.querySelectorAll('.verify-digit')];
+verifyDigits.forEach((input, idx) => {
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/[^0-9]/g, '');
+    if(input.value && idx < verifyDigits.length - 1) verifyDigits[idx + 1].focus();
+  });
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Backspace' && !input.value && idx > 0) verifyDigits[idx - 1].focus();
+  });
+});
+
+document.getElementById('verifySubmitBtn').addEventListener('click', () => {
+  const code = verifyDigits.map(d => d.value).join('');
+  const err = document.getElementById('verifyError');
+  if(code.length < 6 || code !== demoVerifyCode){
+    err.textContent = currentLang === 'tr' ? 'Kod hatalı, tekrar dene.' : 'Incorrect code, try again.';
+    err.classList.add('show');
+    return;
+  }
+  err.classList.remove('show');
+  const user = pendingSignup;
+  pendingSignup = null;
+  completeLogin(user);
+  document.querySelector('.auth-tabs').style.display = 'flex';
+  showToast((currentLang === 'tr' ? 'Hoş geldin, ' : 'Welcome, ') + user.name.split(' ')[0] + (currentLang === 'tr' ? '! Hesabın oluşturuldu 🎉' : '! Your account is ready 🎉'));
+});
+
+document.getElementById('resendCodeBtn').addEventListener('click', () => {
+  demoVerifyCode = String(Math.floor(100000 + Math.random() * 900000));
+  document.getElementById('demoCode').textContent = demoVerifyCode;
+  showToast(currentLang === 'tr' ? 'Yeni kod gönderildi' : 'New code sent');
+});
+
+function renderProfileGuestState(){
+  document.getElementById('profileLoggedInView').style.display = authState.loggedIn ? 'block' : 'none';
+  document.getElementById('profileGuestView').style.display = authState.loggedIn ? 'none' : 'block';
+}
+renderProfileGuestState();
 
 const commentsData = {}; // productId -> array of {author, text, isMe}
 products.forEach(p => {
@@ -620,19 +909,21 @@ products.forEach((p, i) => {
   const likeBtn = card.querySelector('[data-role="like"]');
   likeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    toggleFavorite(p.id);
-    const liked = favorites.has(p.id);
-    likeBtn.classList.toggle('liked', liked);
-    likeBtn.querySelector('[data-role="likecount"]').textContent = liked ? p.likes + 1 : p.likes;
-    if(liked){
-      const burst = document.createElement('div');
-      burst.className = 'heart-burst';
-      burst.innerHTML = '❤️';
-      burst.style.left = '50%'; burst.style.top = '45%';
-      card.appendChild(burst);
-      requestAnimationFrame(() => burst.classList.add('animate'));
-      setTimeout(() => burst.remove(), 700);
-    }
+    requireAuth(() => {
+      toggleFavorite(p.id);
+      const liked = favorites.has(p.id);
+      likeBtn.classList.toggle('liked', liked);
+      likeBtn.querySelector('[data-role="likecount"]').textContent = liked ? p.likes + 1 : p.likes;
+      if(liked){
+        const burst = document.createElement('div');
+        burst.className = 'heart-burst';
+        burst.innerHTML = '❤️';
+        burst.style.left = '50%'; burst.style.top = '45%';
+        card.appendChild(burst);
+        requestAnimationFrame(() => burst.classList.add('animate'));
+        setTimeout(() => burst.remove(), 700);
+      }
+    });
   });
 
   card.querySelector('[data-role="avatar"]').addEventListener('click', (e) => { e.stopPropagation(); openSellerSheet(p.seller); });
@@ -660,6 +951,7 @@ function switchTab(tab){
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
   if(tab === 'search') renderGrid();
   if(tab === 'cart') renderCart();
+  if(tab === 'profile') renderProfileGuestState();
 }
 document.querySelectorAll('.nav-item').forEach(n => n.addEventListener('click', () => switchTab(n.dataset.tab)));
 document.getElementById('searchShortcut').addEventListener('click', () => switchTab('search'));
@@ -694,6 +986,7 @@ function renderGrid(){
     return matchesCat && matchesQuery;
   });
   document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
+  document.getElementById('emptyState').textContent = t('noResults');
   filtered.forEach(p => {
     const el = document.createElement('div');
     el.className = 'grid-item';
@@ -716,6 +1009,7 @@ function renderCart(){
   list.innerHTML = '';
   if(cart.length === 0){
     empty.style.display = 'block';
+    empty.textContent = t('cartEmpty');
     summary.style.display = 'none';
     return;
   }
@@ -731,7 +1025,7 @@ function renderCart(){
       <div class="cart-thumb" style="background-image:url('${p.img}')"></div>
       <div class="cart-item-meta">
         <div class="cart-item-name">${p.name}</div>
-        <div class="cart-item-sub">${item.size} · Adet: ${item.qty}</div>
+        <div class="cart-item-sub">${item.size} · ${t('qty')}: ${item.qty}</div>
         <div class="cart-item-price">${fmt(p.price * item.qty)}</div>
       </div>
       <div class="cart-remove" data-idx="${idx}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
@@ -750,7 +1044,7 @@ function renderCart(){
 }
 
 document.getElementById('checkoutBtn').addEventListener('click', () => {
-  showToast('Ödeme entegrasyonu bir sonraki aşamada eklenecek 💳');
+  requireAuth(() => showToast('Ödeme entegrasyonu bir sonraki aşamada eklenecek 💳'));
 });
 
 function updateCartBadge(){
@@ -772,7 +1066,7 @@ function openFavoritesView(){
   grid.innerHTML = '';
   const favProducts = products.filter(p => favorites.has(p.id));
   document.getElementById('emptyState').style.display = favProducts.length ? 'none' : 'block';
-  document.getElementById('emptyState').textContent = 'Henüz favori ürünün yok 💜';
+  document.getElementById('emptyState').textContent = t('noFavorites');
   favProducts.forEach(p => {
     const el = document.createElement('div');
     el.className = 'grid-item';
@@ -796,7 +1090,7 @@ function renderOrders(){
   mockOrders.forEach(o => {
     const el = document.createElement('div');
     el.className = 'order-item';
-    const statusLabel = o.status === 'delivered' ? 'Teslim Edildi' : 'Yolda';
+    const statusLabel = o.status === 'delivered' ? t('delivered') : t('transit');
     el.innerHTML = `
       <div class="order-top">
         <span class="order-id">${o.id} · ${o.date}</span>
@@ -804,7 +1098,7 @@ function renderOrders(){
       </div>
       <div class="order-row">
         <div class="order-thumbs">${o.items.map(id => `<div class="order-thumb" style="background-image:url('${findProduct(id).img}')"></div>`).join('')}</div>
-        <div class="order-meta">${o.items.length} ürün</div>
+        <div class="order-meta">${t('items', o.items.length)}</div>
         <div class="order-total">${fmt(o.total)}</div>
       </div>`;
     list.appendChild(el);
@@ -821,7 +1115,7 @@ function renderFollowing(){
   const list = document.getElementById('followingList');
   list.innerHTML = '';
   if(followedSellers.size === 0){
-    list.innerHTML = '<div class="empty-state">Henüz kimseyi takip etmiyorsun</div>';
+    list.innerHTML = `<div class="empty-state">${t('noFollowing')}</div>`;
     return;
   }
   [...followedSellers].forEach(sellerName => {
@@ -831,7 +1125,7 @@ function renderFollowing(){
     el.innerHTML = `
       <div class="following-avatar" style="background-image:url('${p.avatar}')"></div>
       <div class="following-name">${sellerName}</div>
-      <div class="unfollow-btn">Takibi Bırak</div>`;
+      <div class="unfollow-btn">${t('unfollow')}</div>`;
     el.querySelector('.unfollow-btn').addEventListener('click', () => {
       followedSellers.delete(sellerName);
       updateFollowStat();
@@ -893,11 +1187,20 @@ document.getElementById('menuSettings').addEventListener('click', () => openShee
 });
 document.getElementById('menuChangePw').addEventListener('click', () => showToast('Şifre değiştirme bağlantısı e-postana gönderildi'));
 document.getElementById('menuLang').addEventListener('click', () => {
-  const el = document.getElementById('langValue');
-  el.textContent = el.textContent === 'Türkçe' ? 'English' : 'Türkçe';
+  document.querySelectorAll('.lang-option').forEach(o => o.classList.toggle('selected', o.dataset.lang === currentLang));
+  openSheetByName('langPicker');
+});
+document.querySelectorAll('.lang-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    applyLanguage(opt.dataset.lang);
+    closeAllSheets();
+  });
 });
 document.getElementById('logoutBtn').addEventListener('click', () => {
   closeAllSheets();
+  authState.loggedIn = false;
+  authState.user = null;
+  renderProfileGuestState();
   showToast('Çıkış yapıldı 👋');
 });
 updateFollowStat();
@@ -953,6 +1256,7 @@ const sheets = {
   avatar: document.getElementById('avatarSheet'),
   address: document.getElementById('addressSheet'),
   settings: document.getElementById('settingsSheet'),
+  langPicker: document.getElementById('langSheet'),
 };
 let openSheetName = null;
 
@@ -999,10 +1303,12 @@ function openProductSheet(p){
 document.getElementById('qtyMinus').addEventListener('click', () => { if(qty > 1){ qty--; document.getElementById('qtyVal').textContent = qty; } });
 document.getElementById('qtyPlus').addEventListener('click', () => { qty++; document.getElementById('qtyVal').textContent = qty; });
 document.getElementById('addToCartBtn').addEventListener('click', () => {
-  cart.push({ productId: activeProduct.id, size: selectedSize, qty });
-  updateCartBadge();
-  closeAllSheets();
-  showToast(`${activeProduct.name} sepete eklendi`);
+  requireAuth(() => {
+    cart.push({ productId: activeProduct.id, size: selectedSize, qty });
+    updateCartBadge();
+    closeAllSheets();
+    showToast(`${activeProduct.name} sepete eklendi`);
+  });
 });
 
 /* Comment sheet */
@@ -1021,7 +1327,7 @@ function renderComments(){
     const el = document.createElement('div');
     el.className = 'comment-item';
     const avatarStyle = (c.isMe && profileAvatarUrl) ? `style="background-image:url('${profileAvatarUrl}')"` : '';
-    const avatarInitial = (c.isMe && profileAvatarUrl) ? '' : (c.isMe ? currentUser.name.slice(0,1) : c.author.slice(0,1).toUpperCase());
+    const avatarInitial = (c.isMe && profileAvatarUrl) ? '' : (c.isMe ? currentUser.initials : c.author.slice(0,1).toUpperCase());
     const displayName = c.isMe ? 'Sen' : '@' + c.author;
     el.innerHTML = `
       <div class="comment-avatar" ${avatarStyle}>${avatarInitial}</div>
@@ -1036,13 +1342,14 @@ function submitComment(){
   const input = document.getElementById('commentInput');
   const text = input.value.trim();
   if(!text) return;
-  commentsData[activeCommentProductId].push({ author: currentUser.username, isMe: true, text });
-  input.value = '';
-  renderComments();
-  document.getElementById('commentTitle').textContent = `Yorumlar · ${commentsData[activeCommentProductId].length}`;
-  // update feed count label
-  const card = [...document.querySelectorAll('.card')][products.findIndex(p => p.id === activeCommentProductId)];
-  if(card) card.querySelector('[data-role="commentcount"]').textContent = commentsData[activeCommentProductId].length;
+  requireAuth(() => {
+    commentsData[activeCommentProductId].push({ author: currentUser.username, isMe: true, text });
+    input.value = '';
+    renderComments();
+    document.getElementById('commentTitle').textContent = `Yorumlar · ${commentsData[activeCommentProductId].length}`;
+    const card = [...document.querySelectorAll('.card')][products.findIndex(p => p.id === activeCommentProductId)];
+    if(card) card.querySelector('[data-role="commentcount"]').textContent = commentsData[activeCommentProductId].length;
+  });
 }
 document.getElementById('commentSend').addEventListener('click', submitComment);
 document.getElementById('commentInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') submitComment(); });
@@ -1081,24 +1388,26 @@ function openSellerSheet(sellerName){
   const avatar = sellerProducts[0].avatar;
   document.getElementById('sellerSheetAvatar').style.backgroundImage = `url('${avatar}')`;
   document.getElementById('sellerSheetName').textContent = sellerName;
-  document.getElementById('sellerSheetStats').textContent = `${sellerProducts.length} ürün · ${(sellerProducts.reduce((s,p)=>s+p.likes,0)).toLocaleString('tr-TR')} beğeni`;
+  document.getElementById('sellerSheetStats').textContent = t('sellerStats', sellerProducts.length, sellerProducts.reduce((s,p)=>s+p.likes,0));
 
   const followBtn = document.getElementById('followBtn');
   const isFollowing = followedSellers.has(sellerName);
-  followBtn.textContent = isFollowing ? 'Takip Ediliyor' : 'Takip Et';
+  followBtn.textContent = isFollowing ? t('following') : t('follow');
   followBtn.classList.toggle('following', isFollowing);
   followBtn.onclick = () => {
-    if(followedSellers.has(sellerName)){
-      followedSellers.delete(sellerName);
-      followBtn.textContent = 'Takip Et';
-      followBtn.classList.remove('following');
-    } else {
-      followedSellers.add(sellerName);
-      followBtn.textContent = 'Takip Ediliyor';
-      followBtn.classList.add('following');
-      showToast(`${sellerName} takip ediliyor`);
-    }
-    updateFollowStat();
+    requireAuth(() => {
+      if(followedSellers.has(sellerName)){
+        followedSellers.delete(sellerName);
+        followBtn.textContent = t('follow');
+        followBtn.classList.remove('following');
+      } else {
+        followedSellers.add(sellerName);
+        followBtn.textContent = t('following');
+        followBtn.classList.add('following');
+        showToast(`${sellerName} takip ediliyor`);
+      }
+      updateFollowStat();
+    });
   };
 
   const grid = document.getElementById('sellerProducts');
