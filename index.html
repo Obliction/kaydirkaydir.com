@@ -70,6 +70,8 @@
   .feed::-webkit-scrollbar{ display:none; }
   .card{ position:relative; height:100%; scroll-snap-align:start; scroll-snap-stop:always; display:flex; align-items:flex-end; }
   .card-media{ position:absolute; inset:0; background-size:cover; background-position:center; filter:saturate(1.05); }
+  .card-media-video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .card-media-gradient{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,11,26,0.05) 0%, rgba(15,11,26,0.1) 45%, rgba(15,11,26,0.92) 100%); pointer-events:none; }
   .card-media::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,11,26,0.05) 0%, rgba(15,11,26,0.1) 45%, rgba(15,11,26,0.92) 100%); }
   .shimmer{ position:absolute; inset:0; background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.06) 45%, transparent 60%); background-size:250% 250%; animation:shimmer 5s ease-in-out infinite; pointer-events:none; }
   @keyframes shimmer{ 0%{background-position:120% 0%;} 50%{background-position:-20% 100%;} 100%{background-position:120% 0%;} }
@@ -332,6 +334,26 @@
   .listing-status.pending{ background:rgba(255,200,87,0.15); color:var(--gold); }
   .listing-status.approved{ background:rgba(74,222,128,0.15); color:var(--success); }
 
+  /* Chat / DM */
+  .chat-header{ display:flex; align-items:center; gap:12px; padding:20px 16px 14px; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+  .chat-back{ width:32px; height:32px; border-radius:50%; background:var(--panel); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .chat-header-avatar{ width:36px; height:36px; border-radius:12px; background-size:cover; background-position:center; background-color:var(--panel-light); flex-shrink:0; }
+  .chat-header-name{ font-size:14.5px; font-weight:700; }
+  .chat-messages{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .msg-row{ display:flex; }
+  .msg-row.me{ justify-content:flex-end; }
+  .msg-bubble{ max-width:75%; padding:10px 14px; border-radius:16px; font-size:13px; line-height:1.4; }
+  .msg-row.me .msg-bubble{ background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
+  .msg-row.them .msg-bubble{ background:var(--panel); color:var(--text); border-bottom-left-radius:4px; }
+  .chat-input-row{ display:flex; gap:8px; align-items:center; padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 14px); border-top:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+  .chat-input-row input{ flex:1; background:var(--panel); border:none; outline:none; border-radius:20px; padding:11px 15px; color:var(--text); font-size:13px; font-family:'Inter'; }
+  .chat-input-row input::placeholder{ color:var(--text-dim); }
+  .chat-send{ width:38px; height:38px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .seller-actions{ display:flex; gap:10px; margin:14px 0 6px; }
+
+  /* Editable profile name */
+  .profile-name-row{ display:flex; align-items:center; gap:7px; cursor:pointer; }
+
   /* Profile guest state */
   .profile-guest-card{ text-align:center; padding:70px 12px; }
   .profile-guest-icon{ width:60px; height:60px; border-radius:20px; background:var(--panel); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
@@ -406,6 +428,20 @@
       </div>
 
       <!-- Seller upload flow -->
+      <!-- Chat / DM screen -->
+      <div class="auth-screen hidden" id="chatScreen" style="padding:0;">
+        <div class="chat-header">
+          <div class="chat-back" id="chatBackBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="chat-header-avatar" id="chatHeaderAvatar"></div>
+          <div class="chat-header-name" id="chatHeaderName">Satıcı</div>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Mesaj yaz...">
+          <div class="chat-send" id="chatSendBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+        </div>
+      </div>
+
       <div class="auth-screen hidden" id="uploadScreen" style="padding:20px 20px 20px;">
         <div class="upload-header">
           <div class="upload-close" id="uploadCloseBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
@@ -562,7 +598,10 @@
                 <div class="avatar-cam-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F0B1A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
               </div>
               <div>
-                <div class="profile-name" id="profileNameDisplay">Elif Yılmaz</div>
+                <div class="profile-name-row" id="profileNameRow">
+                  <div class="profile-name" id="profileNameDisplay">Elif Yılmaz</div>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+                </div>
                 <div class="profile-sub" id="profileEmailDisplay">elif.yilmaz@mail.com</div>
               </div>
             </div>
@@ -570,6 +609,10 @@
               <div class="stat-box" id="statOrdersBox"><div class="stat-num" id="statOrders">3</div><div class="stat-label" id="txtStatOrders">Sipariş</div></div>
               <div class="stat-box" id="statFavsBox"><div class="stat-num" id="statFavs">0</div><div class="stat-label" id="txtStatFavs">Favori</div></div>
               <div class="stat-box" id="statFollowBox"><div class="stat-num" id="statFollow">0</div><div class="stat-label" id="txtStatFollow">Takip</div></div>
+            </div>
+            <div class="menu-item" id="menuMessages">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span id="txtMenuMessages">Mesajlarım</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuFavs">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
@@ -693,8 +736,31 @@
           </div>
           <div class="follow-btn" id="followBtn">Takip Et</div>
         </div>
-        <div class="field-label" id="txtSellerProductsLabel">Ürünleri</div>
+        <div class="seller-actions">
+          <div class="btn-secondary" id="sellerMessageBtn" style="flex:1;">Mesaj Gönder</div>
+        </div>
+        <div class="field-label" id="txtSellerProductsLabel">Videoları</div>
         <div class="seller-products" id="sellerProducts"></div>
+      </div>
+
+      <!-- Messages inbox sheet -->
+      <div class="sheet" id="messagesSheet">
+        <div class="sheet-handle"></div>
+        <div class="comment-sheet-title" id="txtMessagesTitle">Mesajlarım</div>
+        <div id="messagesList"></div>
+        <div class="empty-state" id="messagesEmpty" style="display:none;">Henüz bir mesajın yok</div>
+      </div>
+
+      <!-- Edit display name sheet -->
+      <div class="sheet" id="editNameSheet">
+        <div class="sheet-handle"></div>
+        <div class="comment-sheet-title" id="txtEditNameTitle">Adını Düzenle</div>
+        <label class="auth-field-label" id="txtEditNameLabel">Görünen Ad</label>
+        <input type="text" class="auth-input" id="editNameInput" placeholder="Adın Soyadın">
+        <div class="sheet-actions">
+          <div class="btn-secondary" id="cancelEditNameBtn">Vazgeç</div>
+          <div class="btn-primary" id="saveEditNameBtn">Kaydet</div>
+        </div>
       </div>
 
       <!-- Orders sheet -->
@@ -828,7 +894,7 @@ const STATIC_TEXT = {
   txtMenuFavs: ['Favorilerim','Favorites'], txtMenuOrders: ['Siparişlerim','My Orders'], txtMenuAddr: ['Adreslerim','My Addresses'], txtMenuSettings: ['Ayarlar','Settings'],
   txtSizeLabel: ['Beden','Size'], txtQtyLabel: ['Adet','Quantity'], closeSheetBtn: ['Kapat','Close'], addToCartBtn: ['Sepete Ekle','Add to Cart'],
   txtShareTitle: ['Paylaş','Share'], txtShareCopy: ['Bağlantıyı Kopyala','Copy Link'], txtShareMore: ['Diğer','More'],
-  txtSellerProductsLabel: ['Ürünleri','Products'],
+  txtSellerProductsLabel: ['Videoları','Videos'],
   txtOrdersTitle: ['Siparişlerim','My Orders'], txtFollowingTitle: ['Takip Ettiklerim','Following'],
   txtAvatarTitle: ['Profil Fotoğrafı','Profile Photo'], txtGallery: ['Galeriden Seç','Choose from Gallery'], txtPresetsLabel: ['Hazır Avatarlar','Preset Avatars'],
   txtAddressTitle: ['Adreslerim','My Addresses'], cancelAddrBtn: ['Vazgeç','Cancel'], saveAddrBtn: ['Kaydet','Save'], txtAddAddress: ['Yeni Adres Ekle','Add New Address'],
@@ -846,12 +912,15 @@ const STATIC_TEXT = {
   loginEmailLabel: ['E-posta','Email'], loginPwLabel: ['Şifre','Password'],
   signupNameLabel: ['Ad Soyad','Full Name'], signupEmailLabel: ['E-posta','Email'], signupPwLabel: ['Şifre','Password'],
   txtMenuListings: ['Satıcı Panelim','Seller Panel'], txtListingsTitle: ['Satıcı Panelim','Seller Panel'], listingsUploadBtn: ['+ Yeni Ürün Yükle','+ Upload New Product'],
+  txtMenuMessages: ['Mesajlarım','Messages'], txtMessagesTitle: ['Mesajlarım','Messages'], sellerMessageBtn: ['Mesaj Gönder','Send Message'],
+  txtEditNameTitle: ['Adını Düzenle','Edit Name'], txtEditNameLabel: ['Görünen Ad','Display Name'], cancelEditNameBtn: ['Vazgeç','Cancel'], saveEditNameBtn: ['Kaydet','Save'],
 };
 const PLACEHOLDER_TEXT = {
   searchInput: ['Ürün ya da marka ara...','Search products or brands...'],
   commentInput: ['Yorum yaz...','Write a comment...'],
   addrLabelInput: ['Adres başlığı (ör. Ev, İş)','Address label (e.g. Home, Work)'],
   addrDetailInput: ['Açık adres','Full address'],
+  chatInput: ['Mesaj yaz...','Write a message...'], editNameInput: ['Adın Soyadın','Your full name'],
   loginEmail: ['ornek@mail.com','name@example.com'], signupEmail: ['ornek@mail.com','name@example.com'],
   signupName: ['Adın Soyadın','Your full name'], signupPassword: ['En az 6 karakter','At least 6 characters'],
 };
@@ -1026,13 +1095,32 @@ function findProduct(id){ return products.find(p => p.id === id); }
 
 /* ---------- FEED ---------- */
 const feed = document.getElementById('feed');
+const viewedProductIds = new Set();
+const feedViewObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting && entry.intersectionRatio > 0.6){
+      const pid = Number(entry.target.dataset.productId);
+      if(!viewedProductIds.has(pid)){
+        viewedProductIds.add(pid);
+        const product = findProduct(pid);
+        if(product){
+          product.views = (product.views || 0) + 1;
+          if(openSheetName === 'listings') renderListings();
+        }
+      }
+    }
+  });
+}, { root: feed, threshold: 0.6 });
 function buildFeedCard(p, isFirst){
   const card = document.createElement('div');
   card.className = 'card';
   card.dataset.productId = p.id;
+  const hasRealVideo = !!p.videoUrl;
+  const mediaHtml = hasRealVideo
+    ? `<video class="card-media-video" src="${p.videoUrl}" autoplay muted loop playsinline></video><div class="card-media-gradient"></div>`
+    : `<div class="card-media" style="background-image:url('${p.img}')"></div><div class="shimmer"></div>`;
   card.innerHTML = `
-    <div class="card-media" style="background-image:url('${p.img}')"></div>
-    <div class="shimmer"></div>
+    ${mediaHtml}
     <div class="play-toggle"></div>
     <div class="pause-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg></div>
     ${isFirst ? `<div class="swipe-hint"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/></svg><span>kaydır</span></div>` : ''}
@@ -1068,7 +1156,12 @@ function buildFeedCard(p, isFirst){
 
   card.querySelector('.play-toggle').addEventListener('click', () => {
     card.classList.toggle('paused');
-    card.querySelector('.shimmer').style.animationPlayState = card.classList.contains('paused') ? 'paused' : 'running';
+    if(hasRealVideo){
+      const vid = card.querySelector('.card-media-video');
+      if(card.classList.contains('paused')) vid.pause(); else vid.play().catch(() => {});
+    } else {
+      card.querySelector('.shimmer').style.animationPlayState = card.classList.contains('paused') ? 'paused' : 'running';
+    }
   });
 
   const likeBtn = card.querySelector('[data-role="like"]');
@@ -1101,16 +1194,95 @@ function buildFeedCard(p, isFirst){
   return card;
 }
 function addFeedCard(p, scrollToIt){
+  if(feedFilterFn && !feedFilterFn(p)) return null;
   const card = buildFeedCard(p, false);
   if(typeof feedViewObserver !== 'undefined') feedViewObserver.observe(card);
   return card;
 }
-products.forEach((p, i) => buildFeedCard(p, i === 0));
+
+let feedFilterFn = null;
+function renderFeedList(list, scrollToProductId){
+  feed.innerHTML = '';
+  list.forEach((p, i) => {
+    const card = buildFeedCard(p, i === 0 && !feedFilterFn);
+    if(typeof feedViewObserver !== 'undefined') feedViewObserver.observe(card);
+  });
+  if(scrollToProductId){
+    requestAnimationFrame(() => {
+      const card = feed.querySelector(`.card[data-product-id="${scrollToProductId}"]`);
+      if(card) card.scrollIntoView({ behavior:'instant', block:'start' });
+    });
+  } else {
+    feed.scrollTop = 0;
+  }
+}
+function renderFeed(filterFn, scrollToProductId){
+  feedFilterFn = filterFn || null;
+  const list = feedFilterFn ? products.filter(feedFilterFn) : products;
+  renderFeedList(list, scrollToProductId);
+}
+function openCategoryFeed(p){
+  renderFeed(pr => pr.category === p.category, p.id);
+  switchTab('feed');
+}
+function openSellerFeed(sellerName, productId){
+  renderFeed(pr => pr.seller === sellerName, productId);
+  switchTab('feed');
+  closeAllSheets();
+}
+function shuffledCopy(arr){
+  const copy = [...arr];
+  for(let i = copy.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+let lastRefreshTime = 0;
+function refreshFeed(){
+  const now = Date.now();
+  if(now - lastRefreshTime < 1200) return;
+  lastRefreshTime = now;
+  feedFilterFn = null;
+  renderFeedList(shuffledCopy(products));
+  showToast(currentLang === 'tr' ? 'Akış yenilendi' : 'Feed refreshed');
+}
+
+renderFeed(null);
 
 feed.addEventListener('scroll', () => {
   const hint = document.querySelector('.swipe-hint');
   if(hint) hint.style.display = 'none';
 }, { once:true });
+
+/* Refresh: rapid double-tap on the Akış nav item */
+const feedNavItem = document.querySelector('.nav-item[data-tab="feed"]');
+let lastFeedTapTime = 0;
+feedNavItem.addEventListener('click', () => {
+  const now = Date.now();
+  if(now - lastFeedTapTime < 500) refreshFeed();
+  lastFeedTapTime = now;
+});
+
+/* Refresh: pulling down past the top of the very first video */
+let feedTouchStartY = null;
+feed.addEventListener('touchstart', (e) => {
+  feedTouchStartY = feed.scrollTop <= 0 ? e.touches[0].clientY : null;
+});
+feed.addEventListener('touchmove', (e) => {
+  if(feedTouchStartY !== null){
+    const dy = e.touches[0].clientY - feedTouchStartY;
+    if(dy > 65){
+      refreshFeed();
+      feedTouchStartY = null;
+    }
+  }
+});
+feed.addEventListener('touchend', () => { feedTouchStartY = null; });
+feed.addEventListener('wheel', (e) => {
+  if(feed.scrollTop <= 0 && e.deltaY < -25) refreshFeed();
+});
 
 function toggleFavorite(id){
   if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
@@ -1171,7 +1343,7 @@ function renderGrid(){
         <div class="grid-name">${p.name}</div>
         <div class="grid-price">${fmt(p.price)}</div>
       </div>`;
-    el.addEventListener('click', () => openProductSheet(p));
+    el.addEventListener('click', () => openCategoryFeed(p));
     grid.appendChild(el);
   });
 }
@@ -1433,6 +1605,8 @@ const sheets = {
   settings: document.getElementById('settingsSheet'),
   langPicker: document.getElementById('langSheet'),
   listings: document.getElementById('listingsSheet'),
+  messages: document.getElementById('messagesSheet'),
+  editName: document.getElementById('editNameSheet'),
 };
 let openSheetName = null;
 
@@ -1599,9 +1773,13 @@ function openSellerSheet(sellerName){
     const el = document.createElement('div');
     el.className = 'seller-prod-thumb';
     el.style.backgroundImage = `url('${p.img}')`;
-    el.addEventListener('click', () => openProductSheet(p));
+    el.addEventListener('click', () => openSellerFeed(sellerName, p.id));
     grid.appendChild(el);
   });
+
+  document.getElementById('sellerMessageBtn').onclick = () => {
+    requireAuth(() => { closeAllSheets(); openChat(sellerName); });
+  };
 
   openSheetByName('seller');
 }
@@ -1633,7 +1811,6 @@ let myListings = [];
 let nextListingId = 5000;
 let uploadStep = 1;
 let uploadData = { videoObjectUrl:null, thumbDataUrl:null, name:'', caption:'', price:'', stock:'', shipSize:null, category:null, sizes: [] };
-const viewedProductIds = new Set();
 
 function openUploadScreen(){
   uploadStep = 1;
@@ -1853,7 +2030,7 @@ function publishListingToFeed(listing){
     caption: listing.caption || listing.name, img: listing.thumb || `https://picsum.photos/seed/kk${listing.id}/500/900`,
     name: listing.name, price: listing.price, sizes: listing.sizes.length ? listing.sizes : ['Standart'],
     avatar: profileAvatarUrl || `https://picsum.photos/seed/${currentUser.username}/100/100`,
-    likes: 0, views: 0, shares: 0,
+    likes: 0, views: 0, shares: 0, videoUrl: listing.videoUrl || null,
   };
   listing.publishedProductId = productData.id;
   products.push(productData);
@@ -1862,11 +2039,8 @@ function publishListingToFeed(listing){
 }
 
 function goToProductInFeed(productId){
+  renderFeed(null, productId);
   switchTab('feed');
-  setTimeout(() => {
-    const card = feed.querySelector(`.card[data-product-id="${productId}"]`);
-    if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
-  }, 60);
 }
 
 function listingStatsHtml(product){
@@ -1913,23 +2087,109 @@ function renderListings(){
 document.getElementById('menuListings').addEventListener('click', () => { renderListings(); openSheetByName('listings'); });
 document.getElementById('listingsUploadBtn').addEventListener('click', () => { closeAllSheets(); openUploadScreen(); });
 
-/* View tracking via IntersectionObserver, wired up once feed cards exist */
-const feedViewObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if(entry.isIntersecting && entry.intersectionRatio > 0.6){
-      const pid = Number(entry.target.dataset.productId);
-      if(!viewedProductIds.has(pid)){
-        viewedProductIds.add(pid);
-        const product = findProduct(pid);
-        if(product){
-          product.views = (product.views || 0) + 1;
-          if(openSheetName === 'listings') renderListings();
-        }
-      }
-    }
+/* ============ DIRECT MESSAGING ============ */
+const conversations = {}; // sellerName -> array of {from:'me'|'them', text}
+let activeChatSeller = null;
+const SELLER_REPLIES = [
+  'Merhaba, hemen bakıyorum.',
+  'Stokta mevcut, hemen gönderebilirim.',
+  'Elbette, detayları paylaşayım.',
+  'Teşekkürler, siparişini bekliyorum.',
+  'Sorun olursa buradan ulaşabilirsin.',
+];
+function ensureConversation(sellerName){
+  if(!conversations[sellerName]) conversations[sellerName] = [];
+  return conversations[sellerName];
+}
+function openChat(sellerName){
+  activeChatSeller = sellerName;
+  const product = products.find(p => p.seller === sellerName);
+  document.getElementById('chatHeaderAvatar').style.backgroundImage = product ? `url('${product.avatar}')` : '';
+  document.getElementById('chatHeaderName').textContent = sellerName;
+  ensureConversation(sellerName);
+  renderChatMessages();
+  document.getElementById('chatScreen').classList.remove('hidden');
+}
+function closeChat(){
+  document.getElementById('chatScreen').classList.add('hidden');
+  activeChatSeller = null;
+}
+document.getElementById('chatBackBtn').addEventListener('click', closeChat);
+function renderChatMessages(){
+  const list = document.getElementById('chatMessages');
+  list.innerHTML = '';
+  const msgs = conversations[activeChatSeller] || [];
+  if(msgs.length === 0){
+    list.innerHTML = `<div class="empty-state">${currentLang==='tr' ? 'Henüz mesaj yok, ilk mesajı sen gönder' : 'No messages yet — say hello'}</div>`;
+    return;
+  }
+  msgs.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'msg-row ' + (m.from === 'me' ? 'me' : 'them');
+    row.innerHTML = `<div class="msg-bubble">${m.text}</div>`;
+    list.appendChild(row);
   });
-}, { root: feed, threshold: 0.6 });
-document.querySelectorAll('.card[data-product-id]').forEach(c => feedViewObserver.observe(c));
+  list.scrollTop = list.scrollHeight;
+}
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text || !activeChatSeller) return;
+  const sellerName = activeChatSeller;
+  ensureConversation(sellerName).push({ from:'me', text });
+  input.value = '';
+  renderChatMessages();
+  setTimeout(() => {
+    const reply = SELLER_REPLIES[Math.floor(Math.random() * SELLER_REPLIES.length)];
+    conversations[sellerName].push({ from:'them', text: reply });
+    if(activeChatSeller === sellerName && !document.getElementById('chatScreen').classList.contains('hidden')){
+      renderChatMessages();
+    }
+    if(openSheetName === 'messages') renderMessagesList();
+  }, 1600);
+}
+document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChatMessage(); });
+
+function renderMessagesList(){
+  const list = document.getElementById('messagesList');
+  const empty = document.getElementById('messagesEmpty');
+  const sellers = Object.keys(conversations).filter(s => conversations[s].length > 0);
+  list.innerHTML = '';
+  empty.style.display = sellers.length ? 'none' : 'block';
+  sellers.forEach(sellerName => {
+    const msgs = conversations[sellerName];
+    const last = msgs[msgs.length - 1];
+    const product = products.find(p => p.seller === sellerName);
+    const el = document.createElement('div');
+    el.className = 'following-item';
+    el.innerHTML = `
+      <div class="following-avatar" style="background-image:url('${product ? product.avatar : ''}')"></div>
+      <div class="following-name">${sellerName}<div style="font-size:11px; color:var(--text-dim); font-weight:500; margin-top:2px;">${last.text}</div></div>`;
+    el.addEventListener('click', () => { closeAllSheets(); openChat(sellerName); });
+    list.appendChild(el);
+  });
+}
+document.getElementById('menuMessages').addEventListener('click', () => {
+  requireAuth(() => { renderMessagesList(); openSheetByName('messages'); });
+});
+
+/* ============ EDITABLE DISPLAY NAME ============ */
+document.getElementById('profileNameRow').addEventListener('click', () => {
+  document.getElementById('editNameInput').value = currentUser.name;
+  openSheetByName('editName');
+});
+document.getElementById('cancelEditNameBtn').addEventListener('click', closeAllSheets);
+document.getElementById('saveEditNameBtn').addEventListener('click', () => {
+  const newName = document.getElementById('editNameInput').value.trim();
+  if(!newName) return;
+  currentUser.name = newName;
+  currentUser.initials = initialsFromName(newName);
+  document.getElementById('profileNameDisplay').textContent = newName;
+  if(!profileAvatarUrl) document.getElementById('profileAvatarInitials').textContent = currentUser.initials;
+  closeAllSheets();
+  showToast(currentLang === 'tr' ? 'Adın güncellendi' : 'Name updated');
+});
 </script>
 </body>
 </html>
