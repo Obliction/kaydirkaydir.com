@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="light-theme">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,7 +97,7 @@
   .pause-icon{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.6); width:64px; height:64px; border-radius:50%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s, transform .2s; pointer-events:none; }
   .card.paused .pause-icon{ opacity:1; transform:translate(-50%,-50%) scale(1); }
 
-  .rail{ position:absolute; right:12px; bottom:170px; z-index:20; display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .rail{ position:absolute; right:12px; bottom:190px; z-index:20; display:flex; flex-direction:column; align-items:center; gap:18px; }
   .rail-btn{ display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
   .rail-circle{ width:46px; height:46px; border-radius:50%; background:rgba(20,14,36,0.55); border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; transition:transform .15s; }
   .rail-btn:active .rail-circle{ transform:scale(0.88); }
@@ -106,7 +106,7 @@
   .rail-btn.liked .rail-label{ color:var(--accent); }
   .seller-avatar{ width:42px; height:42px; border-radius:13px; border:2px solid var(--accent); background-size:cover; background-position:center; margin-bottom:2px; cursor:pointer; }
 
-  .card-info{ position:relative; z-index:10; width:100%; padding:0 16px 130px; }
+  .card-info{ position:relative; z-index:10; width:100%; padding:0 16px 85px; }
   .seller-row{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#D8D0EE; margin-bottom:8px; cursor:pointer; text-shadow:0 1px 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.5); }
   .seller-row b{ color:#fff; }
   .caption{ font-size:14px; color:#F5F1FF; opacity:0.95; margin-bottom:14px; max-width:250px; line-height:1.4; text-shadow:0 1px 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.5); }
@@ -114,7 +114,7 @@
   .product-chip:active{ transform:scale(0.97); }
   .product-thumb{ width:44px; height:44px; border-radius:10px; background-size:cover; background-position:center; flex-shrink:0; }
   .product-meta{ flex:1; min-width:0; }
-  .product-name{ font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .product-name{ font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#F5F1FF; }
   .product-price{ font-size:14px; font-weight:700; color:var(--gold); margin-top:2px; }
   .chip-cta{ font-family:'Space Grotesk', sans-serif; font-size:12px; font-weight:700; background:var(--accent); color:#fff; padding:9px 14px; border-radius:20px; white-space:nowrap; }
 
@@ -334,8 +334,8 @@
   .address-form input::placeholder{ color:var(--text-dim); }
 
   /* Auth screen */
-  .auth-screen{ position:absolute; inset:0; z-index:200; background:var(--bg); display:flex; flex-direction:column; padding:54px 24px 30px; overflow-y:auto; }
-  .auth-screen.hidden{ display:none; }
+  .auth-screen{ position:absolute; inset:0; z-index:200; background:var(--bg); display:flex; flex-direction:column; padding:54px 24px 30px; overflow-y:auto; transform:translateY(0); transition:transform .38s cubic-bezier(.32,.72,0,1); }
+  .auth-screen.hidden{ transform:translateY(100%); pointer-events:none; }
   .auth-logo{ text-align:center; margin-bottom:6px; font-family:'Space Grotesk'; font-size:24px; font-weight:700; }
   .auth-logo span:first-child{ color:var(--accent); }
   .auth-logo span:last-child{ color:var(--text); opacity:0.55; }
@@ -491,7 +491,7 @@
       <div class="notch"></div>
 
       <!-- Auth screen (login / signup / verify) -->
-      <div class="auth-screen" id="authScreen">
+      <div class="auth-screen hidden" id="authScreen">
         <div class="auth-logo"><span>kaydır</span><span>kaydır</span></div>
         <div class="auth-sub" id="authSubtitle">Video izle, beğen, anında satın al</div>
 
@@ -576,15 +576,15 @@
         <div class="upload-body">
           <!-- Step 1: Video -->
           <div class="upload-step active" id="uploadStep1">
-            <div class="upload-step-title">Tanıtım Videosu</div>
-            <div class="upload-step-sub">Ürününü en iyi anlatan kısa bir video seç</div>
+            <div class="upload-step-title" id="uploadStep1Title">Tanıtım Videosu</div>
+            <div class="upload-step-sub" id="uploadStep1Sub">Ürününü en iyi anlatan kısa bir video seç</div>
             <div class="video-drop-zone" id="videoDropZone">
               <video id="videoPreview" class="video-preview-el" style="display:none;" muted loop playsinline></video>
               <canvas id="thumbCanvas" style="display:none;"></canvas>
               <div id="videoDropContent">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="16" rx="2"/><polygon points="16 9 22 6 22 18 16 15"/></svg>
-                <div class="video-drop-text">Video seçmek için dokun</div>
-                <div class="video-drop-sub">MP4, MOV — maks. 60 sn önerilir</div>
+                <div class="video-drop-text" id="videoDropText">Video seçmek için dokun</div>
+                <div class="video-drop-sub" id="videoDropSub">MP4, MOV — maks. 60 sn önerilir</div>
               </div>
             </div>
             <div class="field-error" id="videoError">Video yüklemediniz, lütfen devam etmeden önce bir video seç.</div>
@@ -593,26 +593,26 @@
 
           <!-- Step 2: Info -->
           <div class="upload-step" id="uploadStep2">
-            <div class="upload-step-title">Ürün Bilgileri</div>
-            <div class="upload-step-sub">Alıcıların göreceği başlık ve açıklama</div>
-            <label class="auth-field-label">Ürün Adı</label>
+            <div class="upload-step-title" id="uploadStep2Title">Ürün Bilgileri</div>
+            <div class="upload-step-sub" id="uploadStep2Sub">Alıcıların göreceği başlık ve açıklama</div>
+            <label class="auth-field-label" id="uploadNameLabel">Ürün Adı</label>
             <input type="text" class="auth-input" id="uploadName" placeholder="ör. Kraft Deri Sırt Çantası">
             <div class="field-error" id="nameError">Lütfen ürün adını gir.</div>
-            <label class="auth-field-label">Açıklama</label>
+            <label class="auth-field-label" id="uploadCaptionLabel">Açıklama</label>
             <textarea class="auth-input" id="uploadCaption" rows="3" placeholder="Ürününü kısaca anlat..." style="resize:none; font-family:'Inter';"></textarea>
             <div style="display:flex; gap:12px;">
               <div style="flex:1;">
-                <label class="auth-field-label">Fiyat (₺)</label>
+                <label class="auth-field-label" id="uploadPriceLabel">Fiyat (₺)</label>
                 <input type="number" class="auth-input" id="uploadPrice" placeholder="299" min="50">
               </div>
               <div style="flex:1;">
-                <label class="auth-field-label">Stok Adedi</label>
+                <label class="auth-field-label" id="uploadStockLabel">Stok Adedi</label>
                 <input type="number" class="auth-input" id="uploadStock" placeholder="50" min="1">
               </div>
             </div>
             <div class="field-error" id="priceError">Fiyat en az ₺50 olmalı.</div>
             <div class="field-error" id="stockError">Stok adedi en az 1 olmalı.</div>
-            <label class="auth-field-label" style="margin-top:2px;">Kargo Boyutu</label>
+            <label class="auth-field-label" id="uploadShipSizeLabel" style="margin-top:2px;">Kargo Boyutu</label>
             <div class="option-row" id="uploadShipSizeChips" style="margin-bottom:6px;"></div>
             <div class="field-error" id="shipSizeError">Lütfen bir kargo boyutu seç.</div>
             <label class="auth-field-label" id="txtExtraPhotosLabel" style="margin-top:2px;">Ek Fotoğraflar (opsiyonel, en fazla 10)</label>
@@ -623,21 +623,21 @@
 
           <!-- Step 3: Category & sizes -->
           <div class="upload-step" id="uploadStep3">
-            <div class="upload-step-title">Kategori & Beden</div>
-            <div class="upload-step-sub">Ürününün doğru yerde görünmesini sağla</div>
-            <div class="field-label">Kategori</div>
+            <div class="upload-step-title" id="uploadStep3Title">Kategori & Beden</div>
+            <div class="upload-step-sub" id="uploadStep3Sub">Ürününün doğru yerde görünmesini sağla</div>
+            <div class="field-label" id="uploadCategoryLabel">Kategori</div>
             <div class="chip-row" id="uploadCatChips" style="flex-wrap:wrap; overflow:visible;"></div>
             <div class="field-error" id="categoryError">Lütfen bir kategori seç.</div>
             <div id="uploadSizeSection" style="display:none;">
-              <div class="field-label" style="margin-top:20px;">Beden Seçenekleri</div>
+              <div class="field-label" id="uploadSizeLabel" style="margin-top:20px;">Beden Seçenekleri</div>
               <div class="option-row" id="uploadSizeChips"></div>
             </div>
           </div>
 
           <!-- Step 4: Preview -->
           <div class="upload-step" id="uploadStep4">
-            <div class="upload-step-title">Önizleme</div>
-            <div class="upload-step-sub">Akışta böyle görünecek — göndermeden önce kontrol et</div>
+            <div class="upload-step-title" id="uploadStep4Title">Önizleme</div>
+            <div class="upload-step-sub" id="uploadStep4Sub">Akışta böyle görünecek — göndermeden önce kontrol et</div>
             <div class="upload-preview-card">
               <div class="upload-preview-thumb" id="previewThumb"></div>
               <div class="upload-preview-info">
@@ -1068,7 +1068,7 @@
           <div>
             <div class="settings-label" id="txtDarkModeLabel">Karanlık Mod</div>
           </div>
-          <div class="toggle on" id="toggleDarkMode"></div>
+          <div class="toggle" id="toggleDarkMode"></div>
         </div>
         <div class="settings-row">
           <div>
@@ -1234,6 +1234,18 @@ const STATIC_TEXT = {
   txtDiscountTitle: ['İndirim Uygula','Apply Discount'], txtDiscountLabel: ['İndirimli Fiyat (₺)','Discounted Price (₺)'],
   cancelDiscountBtn: ['Vazgeç','Cancel'], saveDiscountBtn: ['Uygula','Apply'], removeDiscountBtn: ['İndirimi Kaldır','Remove Discount'],
   txtSellerReviewsLabel: ['Değerlendirmeler','Reviews'],
+  uploadStep1Title: ['Tanıtım Videosu','Promo Video'], uploadStep1Sub: ['Ürününü en iyi anlatan kısa bir video seç','Choose a short video that shows your product best'],
+  videoDropText: ['Video seçmek için dokun','Tap to choose a video'], videoDropSub: ['MP4, MOV — maks. 60 sn önerilir','MP4, MOV — 60 sec max recommended'],
+  videoError: ['Video yüklemediniz, lütfen devam etmeden önce bir video seç.','You have not uploaded a video — please pick one before continuing.'],
+  uploadStep2Title: ['Ürün Bilgileri','Product Info'], uploadStep2Sub: ['Alıcıların göreceği başlık ve açıklama','The title and description buyers will see'],
+  uploadNameLabel: ['Ürün Adı','Product Name'], nameError: ['Lütfen ürün adını gir.','Please enter a product name.'],
+  uploadCaptionLabel: ['Açıklama','Description'], uploadPriceLabel: ['Fiyat (₺)','Price (₺)'], uploadStockLabel: ['Stok Adedi','Stock Quantity'],
+  priceError: ['Fiyat en az ₺50 olmalı.','Price must be at least ₺50.'], stockError: ['Stok adedi en az 1 olmalı.','Stock quantity must be at least 1.'],
+  uploadShipSizeLabel: ['Kargo Boyutu','Shipping Size'], shipSizeError: ['Lütfen bir kargo boyutu seç.','Please choose a shipping size.'],
+  uploadStep3Title: ['Kategori & Beden','Category & Size'], uploadStep3Sub: ['Ürününün doğru yerde görünmesini sağla','Make sure your product shows up in the right place'],
+  uploadCategoryLabel: ['Kategori','Category'], categoryError: ['Lütfen bir kategori seç.','Please choose a category.'], uploadSizeLabel: ['Beden Seçenekleri','Size Options'],
+  uploadStep4Title: ['Önizleme','Preview'], uploadStep4Sub: ['Akışta böyle görünecek — göndermeden önce kontrol et','This is how it will look in the feed — check it before submitting'],
+  pendingNote: ['Gönderdikten sonra ürünün admin onayına düşecek, onaylanınca akışta yayınlanacak.','After submitting, your product goes to admin review — it will go live in the feed once approved.'],
 };
 const PLACEHOLDER_TEXT = {
   searchInput: ['Ürün ya da marka ara...','Search products or brands...'],
@@ -1245,6 +1257,7 @@ const PLACEHOLDER_TEXT = {
   ratingReviewInput: ['Deneyimini paylaş...','Share your experience...'], discountInput: ['999','999'],
   loginEmail: ['ornek@mail.com','name@example.com'], signupEmail: ['ornek@mail.com','name@example.com'],
   signupName: ['Adın Soyadın','Your full name'], signupPassword: ['En az 6 karakter','At least 6 characters'],
+  uploadName: ['ör. Kraft Deri Sırt Çantası','e.g. Kraft Leather Backpack'], uploadCaption: ['Ürününü kısaca anlat...','Briefly describe your product...'],
 };
 const DYN = {
   tr: { qty:'Adet', delivered:'Teslim Edildi', transit:'Yolda', items:(n)=>`${n} ürün`, unfollow:'Takibi Bırak', noFollowing:'Henüz kimseyi takip etmiyorsun', follow:'Takip Et', following:'Takip Ediliyor', sellerStats:(n,l)=>`${n} ürün · ${l.toLocaleString('tr-TR')} beğeni`, noResults:'Aradığın ürün bulunamadı 🔍', noFavorites:'Henüz favori ürünün yok 💜', cartEmpty:'Sepetin şu an boş — akıştan ürün ekleyerek başla 🛍️', browse:'İncele', swipe:'kaydır', all:'Tümü' },
@@ -1343,11 +1356,30 @@ document.getElementById('loginSubmitBtn').addEventListener('click', () => {
 
 /* ============ NAME VALIDATION: profanity filter + uniqueness ============ */
 const PROFANITY_LIST = [
-  'amk','aq','oç','orospu','piç','yavşak','siktir','ibne','göt','sikik','pezevenk','şerefsiz','fuck','shit','bitch','asshole'
+  'amk','aq','oc','orospu','pic','yavsak','siktir','ibne','got','sikik','pezevenk','serefsiz','fuck','shit','bitch','asshole','piç','şerefsiz'
 ];
+// Leetspeak / lookalike-character substitutions people commonly use to dodge simple filters.
+const LEET_MAP = { '0':'o', '1':'i', '3':'e', '4':'a', '5':'s', '7':'t', '8':'b', '@':'a', '€':'e', '$':'s', '+':'t' };
+function normalizeForProfanityCheck(text){
+  let n = text.toLowerCase();
+  // Turkish-specific characters get folded to their plain-ASCII counterpart so 'İ' vs 'i' or 'Ş' vs 'ş' style
+  // tricks (and the fact that the word list is stored in plain ASCII) don't let anything slip through.
+  n = n.replace(/[ığşçöü]/g, ch => ({'ı':'i','ğ':'g','ş':'s','ç':'c','ö':'o','ü':'u'}[ch]));
+  n = n.replace(/[013457@€$+]/g, ch => LEET_MAP[ch] || ch);
+  // Strip everything that isn't a letter — this collapses spaced-out, dotted, dashed, or starred-out
+  // evasions like "s i k t i r", "s.i.k.t.i.r", "s_i_k_t_i_r" down to one continuous run of letters.
+  n = n.replace(/[^a-z]/g, '');
+  // Collapse repeated letters ("siiiktir", "aqqq") down to a single occurrence so stretching out a word
+  // no longer defeats the match.
+  n = n.replace(/(.)\1+/g, '$1');
+  return n;
+}
 function containsProfanity(text){
-  const normalized = text.toLowerCase().replace(/[^a-zçğıöşü0-9\s]/gi, '');
-  return PROFANITY_LIST.some(word => normalized.includes(word));
+  const normalized = normalizeForProfanityCheck(text);
+  return PROFANITY_LIST.some(word => {
+    const normalizedWord = normalizeForProfanityCheck(word).replace(/(.)\1+/g, '$1');
+    return normalizedWord && normalized.includes(normalizedWord);
+  });
 }
 const takenDisplayNames = new Set(
   products.map(p => p.seller.toLowerCase())
@@ -1448,6 +1480,8 @@ function findProduct(id){ return products.find(p => p.id === id); }
 /* ---------- FEED ---------- */
 const feed = document.getElementById('feed');
 const viewedProductIds = new Set();
+let guestFeedViewCount = 0;
+let guestAuthPromptShown = false;
 const feedViewObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if(entry.isIntersecting && entry.intersectionRatio > 0.6){
@@ -1459,6 +1493,13 @@ const feedViewObserver = new IntersectionObserver((entries) => {
         if(product){
           product.views = (product.views || 0) + 1;
           if(openSheetName === 'listings') renderListings();
+        }
+        if(!authState.loggedIn && !guestAuthPromptShown){
+          guestFeedViewCount++;
+          if(guestFeedViewCount >= 5){
+            guestAuthPromptShown = true;
+            openAuthScreen('login', currentLang === 'tr' ? 'Devam etmek için giriş yap ya da kayıt ol' : 'Sign in or create an account to keep watching');
+          }
         }
       }
     }
@@ -1928,22 +1969,24 @@ document.getElementById('statFavsBox').addEventListener('click', openFavoritesVi
 /* Mock orders */
 /* Orders: mock seed history */
 let myOrders = [
-  { id:'KK-10482', status:'delivered', date:'3 Temmuz', items:[1,4], total:1598, sellerRated: false },
-  { id:'KK-10417', status:'transit', date:'9 Temmuz', items:[2], total:1899, sellerRated: false },
-  { id:'KK-10391', status:'delivered', date:'21 Haziran', items:[3,5], total:1228, sellerRated: false },
+  { id:'KK-10482', status:'delivered', day:3, month:6, items:[1,4], total:1598, sellerRated: false },
+  { id:'KK-10417', status:'transit', day:9, month:6, items:[2], total:1899, sellerRated: false },
+  { id:'KK-10391', status:'delivered', day:21, month:5, items:[3,5], total:1228, sellerRated: false },
 ];
 const COURIER_REPORT_DELAY_MS = 5000; // demo stand-in for real transit time
 const DELIVERY_AUTO_CONFIRM_MS = 15000; // demo stand-in for the ~3-day window most marketplaces use before auto-confirming a courier-reported delivery — verify the exact figure with a lawyer before relying on it
-function orderDateLabel(){
-  const d = new Date();
+function formatOrderDate(day, month){
   const monthsTr = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
-  return `${d.getDate()} ${monthsTr[d.getMonth()]}`;
+  const monthsEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = currentLang === 'tr' ? monthsTr : monthsEn;
+  return `${day} ${months[month]}`;
 }
 function createOrderFromCart(items, total){
+  const now = new Date();
   const order = {
     id: 'KK-' + Math.floor(10000 + Math.random() * 89999),
     status: 'transit',
-    date: orderDateLabel(),
+    day: now.getDate(), month: now.getMonth(),
     items: items.slice(),
     total,
     sellerRated: false,
@@ -1977,7 +2020,7 @@ function renderOrders(){
     const sellerName = o.items[0] ? (findProduct(o.items[0]) || {}).seller : null;
     el.innerHTML = `
       <div class="order-top">
-        <span class="order-id">${o.id} · ${o.date}</span>
+        <span class="order-id">${o.id} · ${formatOrderDate(o.day, o.month)}</span>
         <span class="order-status ${statusClass}">${statusLabel}</span>
       </div>
       <div class="order-row">
@@ -2058,7 +2101,7 @@ function renderAddresses(){
     el.querySelector('.address-delete').addEventListener('click', () => {
       addressesData.splice(idx, 1);
       renderAddresses();
-      showToast('Adres silindi');
+      showToast(currentLang==='tr' ? 'Adres silindi' : 'Address deleted');
     });
     list.appendChild(el);
   });
@@ -2070,13 +2113,13 @@ document.getElementById('cancelAddrBtn').addEventListener('click', () => documen
 document.getElementById('saveAddrBtn').addEventListener('click', () => {
   const label = document.getElementById('addrLabelInput').value.trim();
   const detail = document.getElementById('addrDetailInput').value.trim();
-  if(!label || !detail){ showToast('Lütfen tüm alanları doldur'); return; }
+  if(!label || !detail){ showToast(currentLang==='tr' ? 'Lütfen tüm alanları doldur' : 'Please fill in all fields'); return; }
   addressesData.push({ label, detail });
   document.getElementById('addrLabelInput').value = '';
   document.getElementById('addrDetailInput').value = '';
   document.getElementById('addressForm').classList.remove('open');
   renderAddresses();
-  showToast('Adres eklendi');
+  showToast(currentLang==='tr' ? 'Adres eklendi' : 'Address added');
 });
 
 /* Settings */
@@ -2089,7 +2132,7 @@ document.getElementById('toggleDarkMode').addEventListener('click', (e) => {
   const isDark = e.currentTarget.classList.contains('on');
   document.documentElement.classList.toggle('light-theme', !isDark);
 });
-document.getElementById('menuChangePw').addEventListener('click', () => showToast('Şifre değiştirme bağlantısı e-postana gönderildi'));
+document.getElementById('menuChangePw').addEventListener('click', () => showToast(currentLang==='tr' ? 'Şifre değiştirme bağlantısı e-postana gönderildi' : 'Password reset link sent to your email'));
 document.getElementById('menuLang').addEventListener('click', () => {
   document.querySelectorAll('.lang-option').forEach(o => o.classList.toggle('selected', o.dataset.lang === currentLang));
   openSheetByName('langPicker');
@@ -2105,7 +2148,7 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
   authState.loggedIn = false;
   authState.user = null;
   renderProfileGuestState();
-  showToast('Çıkış yapıldı 👋');
+  showToast(currentLang==='tr' ? 'Çıkış yapıldı 👋' : 'Logged out 👋');
 });
 updateFollowStat();
 
@@ -2121,7 +2164,7 @@ GRADIENT_PAIRS.forEach(pair => {
     el.classList.add('selected');
     setProfileAvatar(url);
     closeAllSheets();
-    showToast('Profil fotoğrafı güncellendi');
+    showToast(currentLang==='tr' ? 'Profil fotoğrafı güncellendi' : 'Profile photo updated');
   });
   presetGrid.appendChild(el);
 });
@@ -2142,7 +2185,7 @@ document.getElementById('avatarFileInput').addEventListener('change', (e) => {
   reader.onload = (ev) => {
     setProfileAvatar(ev.target.result);
     closeAllSheets();
-    showToast('Profil fotoğrafı güncellendi');
+    showToast(currentLang==='tr' ? 'Profil fotoğrafı güncellendi' : 'Profile photo updated');
   };
   reader.readAsDataURL(file);
 });
@@ -2299,7 +2342,7 @@ document.getElementById('addToCartBtn').addEventListener('click', () => {
     cart.push({ productId: activeProduct.id, size: selectedSize, qty });
     updateCartBadge();
     closeAllSheets();
-    showToast(`${activeProduct.name} sepete eklendi`);
+    showToast(currentLang==='tr' ? `${activeProduct.name} sepete eklendi` : `${activeProduct.name} added to cart`);
   });
 });
 
@@ -2309,7 +2352,7 @@ function openCommentSheet(productId){
   activeCommentProductId = productId;
   clearReplyTarget();
   document.getElementById('commentSortPopover').style.display = 'none';
-  document.getElementById('commentTitle').textContent = `Yorumlar · ${totalCommentCount(productId)}`;
+  document.getElementById('commentTitle').textContent = `${currentLang==='tr'?'Yorumlar':'Comments'} · ${totalCommentCount(productId)}`;
   renderComments();
   openSheetByName('comment');
 }
@@ -2416,6 +2459,10 @@ function submitComment(){
   const input = document.getElementById('commentInput');
   const text = input.value.trim();
   if(!text) return;
+  if(containsProfanity(text)){
+    showToast(currentLang==='tr' ? 'Yorumunda uygunsuz bir ifade var, lütfen düzelt' : 'Your comment contains inappropriate language, please edit it');
+    return;
+  }
   requireAuth(() => {
     if(activeReplyTarget){
       if(!activeReplyTarget.replies) activeReplyTarget.replies = [];
@@ -2427,7 +2474,7 @@ function submitComment(){
     input.value = '';
     renderComments();
     const count = totalCommentCount(activeCommentProductId);
-    document.getElementById('commentTitle').textContent = `Yorumlar · ${count}`;
+    document.getElementById('commentTitle').textContent = `${currentLang==='tr'?'Yorumlar':'Comments'} · ${count}`;
     const card = [...document.querySelectorAll('.card')][products.findIndex(p => p.id === activeCommentProductId)];
     if(card) card.querySelector('[data-role="commentcount"]').textContent = count;
   });
@@ -2452,12 +2499,12 @@ document.getElementById('shareCopy').addEventListener('click', () => {
   }
   recordShare();
   closeAllSheets();
-  showToast('Bağlantı kopyalandı 🔗');
+  showToast(currentLang==='tr' ? 'Bağlantı kopyalandı 🔗' : 'Link copied 🔗');
 });
 document.getElementById('shareWhatsapp').addEventListener('click', () => {
   recordShare();
   closeAllSheets();
-  showToast("WhatsApp'ta paylaşım açılıyor...");
+  showToast(currentLang==='tr' ? "WhatsApp'ta paylaşım açılıyor..." : 'Opening share on WhatsApp...');
 });
 document.getElementById('shareAsMessage').addEventListener('click', () => {
   const product = activeShareProduct;
@@ -2489,7 +2536,7 @@ document.getElementById('shareMore').addEventListener('click', () => {
   if(navigator.share){
     navigator.share({ title: activeShareProduct.name, text: activeShareProduct.name, url: link }).catch(() => {});
   } else {
-    showToast('Paylaşım menüsü bu tarayıcıda desteklenmiyor');
+    showToast(currentLang==='tr' ? 'Paylaşım menüsü bu tarayıcıda desteklenmiyor' : 'Share menu is not supported in this browser');
   }
 });
 
@@ -2533,7 +2580,7 @@ function openSellerSheet(sellerName){
         followedSellers.add(sellerName);
         followBtn.textContent = t('following');
         followBtn.classList.add('following');
-        showToast(`${sellerName} takip ediliyor`);
+        showToast(currentLang==='tr' ? `${sellerName} takip ediliyor` : `Now following ${sellerName}`);
       }
       updateFollowStat();
     });
@@ -3114,6 +3161,10 @@ function sendChatMessage(){
   const text = input.value.trim();
   if(!text && !pendingChatAttachment) return;
   if(!activeChatSeller) return;
+  if(text && containsProfanity(text)){
+    showToast(currentLang==='tr' ? 'Mesajında uygunsuz bir ifade var, lütfen düzelt' : 'Your message contains inappropriate language, please edit it');
+    return;
+  }
   const msg = { from:'me', text, time: Date.now() };
   if(pendingChatAttachment){
     msg.attachment = { productId: pendingChatAttachment.id, name: pendingChatAttachment.name, img: pendingChatAttachment.img, price: pendingChatAttachment.price };
