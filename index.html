@@ -50,10 +50,10 @@
   .stage{ height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
   .phone{
     position:relative; width:390px; height:100%; max-height:844px;
-    background:#000; border-radius:46px; padding:14px;
+    background:#151022; border-radius:0; padding:14px;
     box-shadow:0 0 0 2px #2a2340, 0 40px 90px -20px rgba(0,0,0,0.8), 0 0 120px -40px rgba(255,77,109,0.25);
   }
-  .screen{ position:relative; width:100%; height:100%; border-radius:34px; overflow:hidden; background:var(--bg); }
+  .screen{ position:relative; width:100%; height:100%; border-radius:0; overflow:hidden; background:var(--bg); }
   .notch{ display:none; }
 
   /* Top bar */
@@ -188,15 +188,15 @@
   .nav-item{ display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; font-weight:600; color:var(--text); cursor:pointer; position:relative; padding:4px 10px; }
   .nav-item.active{ color:var(--accent); }
   .nav-item.active svg{ stroke:var(--accent); }
-  .nav-badge{ position:absolute; top:-2px; right:2px; background:var(--accent); color:#fff; font-size:9px; font-weight:700; min-width:15px; height:15px; border-radius:8px; padding:0 3px; display:flex; align-items:center; justify-content:center; }
   .upload-fab{ padding:0 !important; }
   .upload-fab-circle{ width:42px; height:42px; border-radius:14px; background:linear-gradient(135deg, var(--accent), #7c3aed); display:flex; align-items:center; justify-content:center; margin-top:-14px; box-shadow:0 8px 20px -6px rgba(255,77,109,0.7); cursor:pointer; transition:transform .15s; }
   .upload-fab:active .upload-fab-circle{ transform:scale(0.9); }
+  .nav-badge{ position:absolute; top:-2px; right:2px; background:var(--accent); color:#fff; font-size:9px; font-weight:700; min-width:15px; height:15px; border-radius:8px; padding:0 3px; display:flex; align-items:center; justify-content:center; }
 
   /* Generic sheet system */
   .sheet-overlay{ position:absolute; inset:0; z-index:80; background:rgba(6,4,12,0.6); opacity:0; pointer-events:none; transition:opacity .25s; }
   .sheet-overlay.open{ opacity:1; pointer-events:auto; }
-  .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:90; background:var(--panel); border-radius:26px 26px 0 0; padding:12px 20px calc(env(safe-area-inset-bottom, 0px) + 20px); transform:translateY(100%); transition:transform .32s cubic-bezier(.32,.72,0,1), max-height .38s cubic-bezier(.32,.72,0,1), height .38s cubic-bezier(.32,.72,0,1); box-shadow:0 -20px 60px rgba(0,0,0,0.5); max-height:78%; overflow-y:auto; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:90; background:var(--panel); border-radius:26px 26px 0 0; padding:12px 20px calc(env(safe-area-inset-bottom, 0px) + 20px); transform:translateY(100%); transition:transform .32s cubic-bezier(.32,.72,0,1), max-height .38s cubic-bezier(.32,.72,0,1), height .38s cubic-bezier(.32,.72,0,1); box-shadow:0 -20px 60px rgba(0,0,0,0.5); max-height:78%; min-height:340px; overflow-y:auto; }
   .sheet.open{ transform:translateY(0); }
   .sheet-handle{ position:relative; width:36px; height:4px; border-radius:3px; background:var(--handle-color); margin:0 auto 16px; }
   .sheet-handle::before{ content:''; position:absolute; top:-18px; left:-40px; right:-40px; bottom:-18px; }
@@ -998,6 +998,7 @@
         <div class="comment-sheet-title" id="txtEditNameTitle">Adını Düzenle</div>
         <label class="auth-field-label" id="txtEditNameLabel">Görünen Ad</label>
         <input type="text" class="auth-input" id="editNameInput" placeholder="Adın Soyadın">
+        <div class="field-error" id="editNameError">Hata mesajı</div>
         <div class="sheet-actions">
           <div class="btn-secondary" id="cancelEditNameBtn">Vazgeç</div>
           <div class="btn-primary" id="saveEditNameBtn">Kaydet</div>
@@ -1192,7 +1193,7 @@ let profileAvatarUrl = null;
 let currentLang = 'tr';
 
 const STATIC_TEXT = {
-  navLabelFeed: ['Akış','Feed'], navLabelSearch: ['Keşfet','Discover'], navLabelCart: ['Sepetim','Cart'], navLabelProfile: ['Profil','Profile'],
+  navLabelFeed: ['Akış','Feed'], navLabelSearch: ['Keşfet','Discover'], navLabelUpload: ['Ekle','Add'], navLabelCart: ['Sepetim','Cart'], navLabelProfile: ['Profil','Profile'],
   txtCartTitle: ['Sepetim','My Cart'], txtSubtotal: ['Ara Toplam','Subtotal'], txtShippingLabel: ['Kargo','Shipping'], txtTotalLabel: ['Toplam','Total'], checkoutBtn: ['Ödemeye Geç','Checkout'],
   txtStatOrders: ['Sipariş','Orders'], txtStatFavs: ['Favori','Favorites'], txtStatFollow: ['Takip','Following'],
   txtMenuFavs: ['Favorilerim','Favorites'], txtMenuOrders: ['Siparişlerim','My Orders'], txtMenuAddr: ['Adreslerim','My Addresses'], txtMenuSettings: ['Ayarlar','Settings'],
@@ -1315,6 +1316,7 @@ document.getElementById('guestSignupBtn').addEventListener('click', () => openAu
 function completeLogin(user){
   authState.loggedIn = true;
   authState.user = user;
+  takenDisplayNames.add(user.name.trim().toLowerCase());
   currentUser.name = user.name;
   currentUser.username = user.email.split('@')[0];
   currentUser.initials = initialsFromName(user.name);
@@ -1339,12 +1341,40 @@ document.getElementById('loginSubmitBtn').addEventListener('click', () => {
   showToast((currentLang === 'tr' ? 'Tekrar hoş geldin, ' : 'Welcome back, ') + name.split(' ')[0] + '!');
 });
 
+/* ============ NAME VALIDATION: profanity filter + uniqueness ============ */
+const PROFANITY_LIST = [
+  'amk','aq','oç','orospu','piç','yavşak','siktir','ibne','göt','sikik','pezevenk','şerefsiz','fuck','shit','bitch','asshole'
+];
+function containsProfanity(text){
+  const normalized = text.toLowerCase().replace(/[^a-zçğıöşü0-9\s]/gi, '');
+  return PROFANITY_LIST.some(word => normalized.includes(word));
+}
+const takenDisplayNames = new Set(
+  products.map(p => p.seller.toLowerCase())
+);
+function isNameTaken(name, excludeCurrent){
+  const normalized = name.trim().toLowerCase();
+  if(excludeCurrent && normalized === (currentUser.name || '').toLowerCase()) return false;
+  return takenDisplayNames.has(normalized);
+}
+
 document.getElementById('signupSubmitBtn').addEventListener('click', () => {
   const name = document.getElementById('signupName').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
   const pw = document.getElementById('signupPassword').value.trim();
   const err = document.getElementById('signupError');
-  if(!name || !email || pw.length < 6){ err.classList.add('show'); return; }
+  if(!name || !email || pw.length < 6){
+    err.textContent = currentLang==='tr' ? 'Lütfen tüm alanları doldur (şifre en az 6 karakter).' : 'Please fill in all fields (password at least 6 characters).';
+    err.classList.add('show'); return;
+  }
+  if(containsProfanity(name)){
+    err.textContent = currentLang==='tr' ? 'Adında uygunsuz bir ifade tespit edildi, lütfen düzelt.' : 'Your name contains inappropriate language, please fix it.';
+    err.classList.add('show'); return;
+  }
+  if(isNameTaken(name)){
+    err.textContent = currentLang==='tr' ? 'Bu kullanıcı adı zaten alınmış, başka bir tane dene.' : 'This username is already taken, please try another.';
+    err.classList.add('show'); return;
+  }
   err.classList.remove('show');
   pendingSignup = { name, email, password: pw };
   demoVerifyCode = String(Math.floor(100000 + Math.random() * 900000));
@@ -3129,12 +3159,25 @@ document.getElementById('menuMessages').addEventListener('click', () => {
 /* ============ EDITABLE DISPLAY NAME ============ */
 document.getElementById('profileNameRow').addEventListener('click', () => {
   document.getElementById('editNameInput').value = currentUser.name;
+  document.getElementById('editNameError').classList.remove('show');
   openSheetByName('editName');
 });
 document.getElementById('cancelEditNameBtn').addEventListener('click', closeAllSheets);
 document.getElementById('saveEditNameBtn').addEventListener('click', () => {
   const newName = document.getElementById('editNameInput').value.trim();
+  const err = document.getElementById('editNameError');
   if(!newName) return;
+  if(containsProfanity(newName)){
+    err.textContent = currentLang==='tr' ? 'Adında uygunsuz bir ifade tespit edildi, lütfen düzelt.' : 'Your name contains inappropriate language, please fix it.';
+    err.classList.add('show'); return;
+  }
+  if(isNameTaken(newName, true)){
+    err.textContent = currentLang==='tr' ? 'Bu kullanıcı adı zaten alınmış, başka bir tane dene.' : 'This username is already taken, please try another.';
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+  takenDisplayNames.delete((currentUser.name || '').toLowerCase());
+  takenDisplayNames.add(newName.toLowerCase());
   currentUser.name = newName;
   currentUser.initials = initialsFromName(newName);
   document.getElementById('profileNameDisplay').textContent = newName;
