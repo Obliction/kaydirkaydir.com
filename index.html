@@ -110,7 +110,7 @@
   .seller-row{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#D8D0EE; margin-bottom:8px; cursor:pointer; text-shadow:0 1px 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.5); }
   .seller-row b{ color:#fff; }
   .caption{ font-size:14px; color:#F5F1FF; opacity:0.95; margin-bottom:14px; max-width:250px; line-height:1.4; text-shadow:0 1px 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.5); }
-  .product-chip{ display:flex; align-items:center; gap:12px; background:rgba(27,20,48,0.72); border:1px solid rgba(255,255,255,0.12); backdrop-filter:blur(10px); border-radius:var(--radius-md); padding:10px 14px; cursor:pointer; transition:transform .15s; }
+  .product-chip{ display:flex; align-items:center; gap:12px; background:rgba(52,40,84,0.78); border:1px solid rgba(255,255,255,0.18); backdrop-filter:blur(10px); border-radius:var(--radius-md); padding:10px 14px; margin-bottom:20px; cursor:pointer; transition:transform .15s; box-shadow:0 8px 24px -8px rgba(0,0,0,0.5); }
   .product-chip:active{ transform:scale(0.97); }
   .product-thumb{ width:44px; height:44px; border-radius:10px; background-size:cover; background-position:center; flex-shrink:0; }
   .product-meta{ flex:1; min-width:0; }
@@ -196,8 +196,8 @@
   /* Generic sheet system */
   .sheet-overlay{ position:absolute; inset:0; z-index:80; background:rgba(6,4,12,0.6); opacity:0; pointer-events:none; transition:opacity .25s; }
   .sheet-overlay.open{ opacity:1; pointer-events:auto; }
-  .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:90; background:var(--panel); border-radius:26px 26px 0 0; padding:12px 20px calc(env(safe-area-inset-bottom, 0px) + 20px); transform:translateY(100%); transition:transform .32s cubic-bezier(.32,.72,0,1), max-height .38s cubic-bezier(.32,.72,0,1), height .38s cubic-bezier(.32,.72,0,1); box-shadow:0 -20px 60px rgba(0,0,0,0.5); max-height:78%; min-height:340px; overflow-y:auto; }
-  .sheet.open{ transform:translateY(0); }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:90; background:var(--panel); border-radius:26px 26px 0 0; padding:12px 20px calc(env(safe-area-inset-bottom, 0px) + 20px); transform:translateY(100%); transition:transform .32s cubic-bezier(.32,.72,0,1), max-height .38s cubic-bezier(.32,.72,0,1), height .38s cubic-bezier(.32,.72,0,1), box-shadow .32s; max-height:78%; min-height:340px; overflow-y:auto; box-shadow:none; }
+  .sheet.open{ transform:translateY(0); box-shadow:0 -20px 60px rgba(0,0,0,0.5); }
   .sheet-handle{ position:relative; width:36px; height:4px; border-radius:3px; background:var(--handle-color); margin:0 auto 16px; }
   .sheet-handle::before{ content:''; position:absolute; top:-18px; left:-40px; right:-40px; bottom:-18px; }
 
