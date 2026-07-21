@@ -9,6 +9,7 @@
 <style>
   :root{
     --bg:#0F0B1A;
+    --bg-rgb:15,11,26;
     --panel:#1B1430;
     --panel-light:#251C40;
     --accent:#FF4D6D;
@@ -17,11 +18,15 @@
     --text:#F5F1FF;
     --text-dim:#A79BC7;
     --success:#4ADE80;
+    --border-soft:rgba(255,255,255,0.08);
+    --border-soft-strong:rgba(255,255,255,0.18);
+    --handle-color:rgba(255,255,255,0.22);
     --radius-lg:28px;
     --radius-md:16px;
   }
   :root.light-theme{
     --bg:#F7F5FB;
+    --bg-rgb:247,245,251;
     --panel:#FFFFFF;
     --panel-light:#F0EDF7;
     --accent-dim:#FFE1E8;
@@ -29,6 +34,9 @@
     --text:#1F1B2E;
     --text-dim:#726B87;
     --success:#189A54;
+    --border-soft:rgba(31,27,46,0.1);
+    --border-soft-strong:rgba(31,27,46,0.18);
+    --handle-color:rgba(31,27,46,0.22);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{
@@ -46,7 +54,7 @@
     box-shadow:0 0 0 2px #2a2340, 0 40px 90px -20px rgba(0,0,0,0.8), 0 0 120px -40px rgba(255,77,109,0.25);
   }
   .screen{ position:relative; width:100%; height:100%; border-radius:34px; overflow:hidden; background:var(--bg); }
-  .notch{ position:absolute; top:14px; left:50%; transform:translateX(-50%); width:120px; height:28px; background:#000; border-radius:20px; z-index:50; }
+  .notch{ display:none; }
 
   /* Top bar */
   .topbar{
@@ -81,8 +89,8 @@
   .card{ position:relative; height:100%; scroll-snap-align:start; scroll-snap-stop:always; display:flex; align-items:flex-end; }
   .card-media{ position:absolute; inset:0; background-size:cover; background-position:center; filter:saturate(1.05); }
   .card-media-video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-  .card-media-gradient{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,11,26,0.05) 0%, rgba(15,11,26,0.1) 45%, rgba(15,11,26,0.92) 100%); pointer-events:none; }
-  .card-media::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,11,26,0.05) 0%, rgba(15,11,26,0.1) 45%, rgba(15,11,26,0.92) 100%); }
+  .card-media-gradient{ display:none; }
+  .card-media::after{ content:none; }
   .shimmer{ position:absolute; inset:0; background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.06) 45%, transparent 60%); background-size:250% 250%; animation:shimmer 5s ease-in-out infinite; pointer-events:none; }
   @keyframes shimmer{ 0%{background-position:120% 0%;} 50%{background-position:-20% 100%;} 100%{background-position:120% 0%;} }
   .play-toggle{ position:absolute; inset:0; z-index:5; cursor:pointer; }
@@ -98,10 +106,10 @@
   .rail-btn.liked .rail-label{ color:var(--accent); }
   .seller-avatar{ width:42px; height:42px; border-radius:13px; border:2px solid var(--accent); background-size:cover; background-position:center; margin-bottom:2px; cursor:pointer; }
 
-  .card-info{ position:relative; z-index:10; width:100%; padding:0 16px 110px; }
-  .seller-row{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--text-dim); margin-bottom:8px; cursor:pointer; }
-  .seller-row b{ color:var(--text); }
-  .caption{ font-size:14px; color:var(--text); opacity:0.9; margin-bottom:14px; max-width:250px; line-height:1.4; }
+  .card-info{ position:relative; z-index:10; width:100%; padding:0 16px 130px; }
+  .seller-row{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#D8D0EE; margin-bottom:8px; cursor:pointer; text-shadow:0 1px 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.5); }
+  .seller-row b{ color:#fff; }
+  .caption{ font-size:14px; color:#F5F1FF; opacity:0.95; margin-bottom:14px; max-width:250px; line-height:1.4; text-shadow:0 1px 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.5); }
   .product-chip{ display:flex; align-items:center; gap:12px; background:rgba(27,20,48,0.72); border:1px solid rgba(255,255,255,0.12); backdrop-filter:blur(10px); border-radius:var(--radius-md); padding:10px 14px; cursor:pointer; transition:transform .15s; }
   .product-chip:active{ transform:scale(0.97); }
   .product-thumb{ width:44px; height:44px; border-radius:10px; background-size:cover; background-position:center; flex-shrink:0; }
@@ -156,7 +164,7 @@
   .coupon-status.success{ background:rgba(74,222,128,0.12); color:var(--success); }
   .coupon-status.error{ background:var(--accent-dim); color:var(--accent); }
   .summary-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--text-dim); margin-bottom:8px; }
-  .summary-row.total{ color:var(--text); font-weight:700; font-size:15px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); margin-top:4px; }
+  .summary-row.total{ color:var(--text); font-weight:700; font-size:15px; padding-top:8px; border-top:1px solid var(--border-soft); margin-top:4px; }
   .checkout-btn{ margin-top:14px; background:var(--accent); text-align:center; padding:15px; border-radius:16px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 8px 24px -8px rgba(255,77,109,0.6); }
 
   /* ===== PROFILE TAB ===== */
@@ -171,14 +179,14 @@
   .stat-box:active{ transform:scale(0.95); }
   .stat-num{ font-family:'Space Grotesk'; font-size:18px; font-weight:700; color:var(--accent); }
   .stat-label{ font-size:11px; color:var(--text-dim); margin-top:2px; }
-  .menu-item{ display:flex; align-items:center; gap:12px; padding:14px 4px; border-bottom:1px solid rgba(255,255,255,0.06); font-size:13.5px; font-weight:600; cursor:pointer; }
+  .menu-item{ display:flex; align-items:center; gap:12px; padding:14px 4px; border-bottom:1px solid var(--border-soft); font-size:13.5px; font-weight:600; cursor:pointer; }
   .menu-item svg{ flex-shrink:0; }
   .menu-item span.arrow{ margin-left:auto; color:var(--text-dim); }
 
   /* Bottom nav */
-  .bottomnav{ position:absolute; bottom:0; left:0; right:0; z-index:60; display:flex; justify-content:space-around; align-items:center; padding:10px 8px calc(env(safe-area-inset-bottom, 0px) + 10px); background:linear-gradient(0deg, rgba(10,7,19,0.97) 60%, rgba(10,7,19,0.7) 100%); border-top:1px solid rgba(255,255,255,0.06); }
-  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; font-weight:600; color:var(--text-dim); cursor:pointer; position:relative; padding:4px 10px; }
-  .nav-item.active{ color:var(--text); }
+  .bottomnav{ position:absolute; bottom:0; left:0; right:0; z-index:75; display:flex; justify-content:space-around; align-items:center; padding:12px 8px calc(env(safe-area-inset-bottom, 0px) + 12px); background:var(--panel); border-top:1px solid var(--border-soft-strong); }
+  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; font-weight:600; color:var(--text); cursor:pointer; position:relative; padding:4px 10px; }
+  .nav-item.active{ color:var(--accent); }
   .nav-item.active svg{ stroke:var(--accent); }
   .nav-badge{ position:absolute; top:-2px; right:2px; background:var(--accent); color:#fff; font-size:9px; font-weight:700; min-width:15px; height:15px; border-radius:8px; padding:0 3px; display:flex; align-items:center; justify-content:center; }
   .upload-fab{ padding:0 !important; }
@@ -190,7 +198,7 @@
   .sheet-overlay.open{ opacity:1; pointer-events:auto; }
   .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:90; background:var(--panel); border-radius:26px 26px 0 0; padding:12px 20px calc(env(safe-area-inset-bottom, 0px) + 20px); transform:translateY(100%); transition:transform .32s cubic-bezier(.32,.72,0,1), max-height .38s cubic-bezier(.32,.72,0,1), height .38s cubic-bezier(.32,.72,0,1); box-shadow:0 -20px 60px rgba(0,0,0,0.5); max-height:78%; overflow-y:auto; }
   .sheet.open{ transform:translateY(0); }
-  .sheet-handle{ position:relative; width:36px; height:4px; border-radius:3px; background:rgba(255,255,255,0.2); margin:0 auto 16px; }
+  .sheet-handle{ position:relative; width:36px; height:4px; border-radius:3px; background:var(--handle-color); margin:0 auto 16px; }
   .sheet-handle::before{ content:''; position:absolute; top:-18px; left:-40px; right:-40px; bottom:-18px; }
 
   .sheet-top{ display:flex; gap:14px; margin-bottom:18px; }
@@ -211,7 +219,7 @@
   .photo-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
   .photo-thumb{ position:relative; width:56px; height:56px; border-radius:10px; background-size:cover; background-position:center; }
   .photo-remove{ position:absolute; top:-5px; right:-5px; width:18px; height:18px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; }
-  .add-photo-btn{ border:1.5px dashed rgba(255,255,255,0.18); border-radius:14px; padding:10px; text-align:center; font-size:12px; font-weight:600; color:var(--text-dim); cursor:pointer; margin-bottom:16px; }
+  .add-photo-btn{ border:1.5px dashed var(--border-soft-strong); border-radius:14px; padding:10px; text-align:center; font-size:12px; font-weight:600; color:var(--text-dim); cursor:pointer; margin-bottom:16px; }
   .photo-gallery{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; margin-top:16px; border-radius:14px; cursor:grab; }
   .photo-gallery::-webkit-scrollbar{ display:none; }
 
@@ -240,6 +248,10 @@
   .comment-sort-opt:hover, .comment-sort-opt.active{ background:var(--accent-dim); color:var(--accent); }
   .comment-item{ display:flex; gap:10px; margin-bottom:16px; }
   .comment-body-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .comment-reply-link{ font-size:11px; font-weight:700; color:var(--text-dim); margin-top:5px; cursor:pointer; display:inline-block; }
+  .comment-reply-link:hover{ color:var(--accent); }
+  .comment-replies{ margin-top:10px; padding-left:14px; border-left:2px solid var(--panel-light); display:flex; flex-direction:column; gap:12px; }
+  .comment-reply-item{ margin-bottom:0; }
   .comment-like-btn{ display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; flex-shrink:0; padding-top:2px; }
   .comment-like-btn svg{ stroke:var(--text-dim); transition:stroke .15s, fill .15s; }
   .comment-like-btn.liked svg{ stroke:var(--accent); fill:var(--accent); }
@@ -248,7 +260,7 @@
   .comment-author.me{ color:var(--accent); font-weight:800; }
   .comment-author{ font-size:12.5px; font-weight:700; margin-bottom:2px; }
   .comment-text{ font-size:13px; color:var(--text-dim); line-height:1.4; }
-  .comment-input-row{ display:flex; gap:8px; align-items:center; margin-top:6px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); }
+  .comment-input-row{ display:flex; gap:8px; align-items:center; margin-top:6px; padding-top:14px; border-top:1px solid var(--border-soft); }
   .comment-input-row input{ flex:1; background:var(--panel-light); border:none; outline:none; border-radius:20px; padding:11px 15px; color:var(--text); font-size:13px; font-family:'Inter'; }
   .comment-send{ width:38px; height:38px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
 
@@ -286,7 +298,7 @@
   .order-total{ font-size:13px; font-weight:700; color:var(--gold); }
 
   /* Following sheet */
-  .following-item{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .following-item{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border-soft); }
   .following-avatar{ width:44px; height:44px; border-radius:14px; background-size:cover; background-position:center; }
   .following-name{ flex:1; font-size:13.5px; font-weight:600; }
   .unfollow-btn{ padding:7px 14px; border-radius:16px; background:var(--panel-light); font-size:12px; font-weight:700; cursor:pointer; }
@@ -299,7 +311,7 @@
   .avatar-preset.selected{ border-color:var(--accent); }
 
   /* Settings sheet */
-  .settings-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .settings-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border-soft); }
   .settings-label{ font-size:13.5px; font-weight:600; }
   .settings-sub{ font-size:11.5px; color:var(--text-dim); margin-top:2px; }
   .toggle{ width:44px; height:26px; border-radius:14px; background:var(--panel-light); position:relative; cursor:pointer; flex-shrink:0; transition:background .2s; }
@@ -315,7 +327,7 @@
   .address-label{ font-size:13.5px; font-weight:700; margin-bottom:2px; }
   .address-detail{ font-size:12px; color:var(--text-dim); line-height:1.4; }
   .address-delete{ width:26px; height:26px; border-radius:50%; background:var(--panel-light); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; margin-left:auto; }
-  .add-address-btn{ border:1.5px dashed rgba(255,255,255,0.18); border-radius:16px; padding:14px; text-align:center; font-size:13px; font-weight:600; color:var(--text-dim); cursor:pointer; }
+  .add-address-btn{ border:1.5px dashed var(--border-soft-strong); border-radius:16px; padding:14px; text-align:center; font-size:13px; font-weight:600; color:var(--text-dim); cursor:pointer; }
   .address-form{ background:var(--panel); border-radius:16px; padding:14px; margin-bottom:10px; display:none; }
   .address-form.open{ display:block; }
   .address-form input{ width:100%; background:var(--panel-light); border:none; outline:none; border-radius:12px; padding:11px 13px; color:var(--text); font-size:13px; font-family:'Inter'; margin-bottom:8px; }
@@ -360,7 +372,7 @@
   .upload-step.active{ display:block; }
   .upload-step-title{ font-family:'Space Grotesk'; font-size:19px; font-weight:700; margin-bottom:6px; }
   .upload-step-sub{ font-size:12.5px; color:var(--text-dim); margin-bottom:22px; }
-  .video-drop-zone{ position:relative; width:100%; aspect-ratio:9/13; background:var(--panel); border:1.5px dashed rgba(255,255,255,0.16); border-radius:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; }
+  .video-drop-zone{ position:relative; width:100%; aspect-ratio:9/13; background:var(--panel); border:1.5px dashed var(--border-soft-strong); border-radius:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; }
   .video-drop-zone.filled{ border-style:solid; border-color:var(--accent); }
   #videoDropContent{ display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; padding:20px; }
   .video-drop-text{ font-size:13.5px; font-weight:600; color:var(--text); }
@@ -412,7 +424,7 @@
   .mini-btn.danger{ color:var(--accent); }
 
   /* Chat / DM */
-  .chat-header{ display:flex; align-items:center; gap:12px; padding:20px 16px 14px; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+  .chat-header{ display:flex; align-items:center; gap:12px; padding:20px 16px 14px; border-bottom:1px solid var(--border-soft); flex-shrink:0; }
   .chat-back{ width:32px; height:32px; border-radius:50%; background:var(--panel); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
   .chat-header-avatar{ width:36px; height:36px; border-radius:12px; background-size:cover; background-position:center; background-color:var(--panel-light); flex-shrink:0; }
   .chat-header-name{ font-size:14.5px; font-weight:700; }
@@ -422,7 +434,7 @@
   .msg-bubble{ max-width:75%; padding:10px 14px; border-radius:16px; font-size:13px; line-height:1.4; }
   .msg-row.me .msg-bubble{ background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
   .msg-row.them .msg-bubble{ background:var(--panel); color:var(--text); border-bottom-left-radius:4px; }
-  .chat-input-row{ display:flex; gap:8px; align-items:center; padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 14px); border-top:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+  .chat-input-row{ display:flex; gap:8px; align-items:center; padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 14px); border-top:1px solid var(--border-soft); flex-shrink:0; }
   .chat-input-row input{ flex:1; background:var(--panel); border:none; outline:none; border-radius:20px; padding:11px 15px; color:var(--text); font-size:13px; font-family:'Inter'; }
   .chat-input-row input::placeholder{ color:var(--text-dim); }
   .chat-send{ width:38px; height:38px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
@@ -537,7 +549,7 @@
       <!-- Chat / DM screen -->
       <div class="auth-screen hidden" id="chatScreen" style="padding:0;">
         <div class="chat-header">
-          <div class="chat-back" id="chatBackBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="chat-back" id="chatBackBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
           <div class="chat-header-avatar" id="chatHeaderAvatar"></div>
           <div class="chat-header-name" id="chatHeaderName">Satıcı</div>
         </div>
@@ -551,7 +563,7 @@
 
       <div class="auth-screen hidden" id="uploadScreen" style="padding:20px 20px 20px;">
         <div class="upload-header">
-          <div class="upload-close" id="uploadCloseBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+          <div class="upload-close" id="uploadCloseBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
           <div class="upload-step-dots" id="uploadStepDots">
             <div class="step-dot active" data-step="1"></div>
             <div class="step-dot" data-step="2"></div>
@@ -741,35 +753,35 @@
               <div class="stat-box" id="statFollowBox"><div class="stat-num" id="statFollow">0</div><div class="stat-label" id="txtStatFollow">Takip</div></div>
             </div>
             <div class="menu-item" id="menuMessages">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               <span id="txtMenuMessages">Mesajlarım</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuNotifications">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span id="txtMenuNotifications">Bildirimler</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuRecent">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span id="txtMenuRecent">Son Kaydırdıklarım</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuFavs">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
               <span id="txtMenuFavs">Favorilerim</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuOrders">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7L12 3 4 7v10l8 4 8-4V7z"/><line x1="12" y1="22" x2="12" y2="12"/><line x1="20" y1="7" x2="12" y2="12"/><line x1="4" y1="7" x2="12" y2="12"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7L12 3 4 7v10l8 4 8-4V7z"/><line x1="12" y1="22" x2="12" y2="12"/><line x1="20" y1="7" x2="12" y2="12"/><line x1="4" y1="7" x2="12" y2="12"/></svg>
               <span id="txtMenuOrders">Siparişlerim</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuAddr">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span id="txtMenuAddr">Adreslerim</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuListings">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="16" rx="2"/><polygon points="16 9 22 6 22 18 16 15"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="16" rx="2"/><polygon points="16 9 22 6 22 18 16 15"/></svg>
               <span id="txtMenuListings">Satıcı Panelim</span> <span class="arrow">›</span>
             </div>
             <div class="menu-item" id="menuSettings">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               <span id="txtMenuSettings">Ayarlar</span> <span class="arrow">›</span>
             </div>
             </div>
@@ -860,7 +872,7 @@
         <div class="comment-sheet-title" id="txtShareTitle">Paylaş</div>
         <div class="share-options">
           <div class="share-opt" id="shareCopy">
-            <div class="share-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+            <div class="share-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
             <span id="txtShareCopy">Bağlantıyı Kopyala</span>
           </div>
           <div class="share-opt" id="shareWhatsapp">
@@ -868,7 +880,7 @@
             WhatsApp
           </div>
           <div class="share-opt" id="shareAsMessage">
-            <div class="share-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="share-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
             <span id="txtShareAsMessage">Mesaj Olarak Gönder</span>
           </div>
           <div class="share-opt" id="shareMore">
@@ -971,7 +983,7 @@
         <div class="comment-sheet-title" id="txtDiscountTitle">İndirim Uygula</div>
         <div class="upload-preview-card" id="discountPreview"></div>
         <label class="auth-field-label" id="txtDiscountLabel">İndirimli Fiyat (₺)</label>
-        <input type="number" class="auth-input" id="discountInput" placeholder="999" min="1">
+        <input type="number" class="auth-input" id="discountInput" placeholder="999" min="50">
         <div class="earnings-note" id="discountEarningsNote" style="display:none;"></div>
         <div class="sheet-actions">
           <div class="btn-secondary" id="cancelDiscountBtn">Vazgeç</div>
@@ -1022,7 +1034,7 @@
         <div class="comment-sheet-title" id="txtAvatarTitle">Profil Fotoğrafı</div>
         <div class="avatar-picker-row">
           <div class="avatar-upload-btn" id="avatarUploadBtn">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="txtGallery">Galeriden Seç</span>
           </div>
         </div>
@@ -1110,13 +1122,69 @@
 <div class="credit">Kaydır Kaydır — etkileşimli prototip · örnek veriler</div>
 
 <script>
+/* ============ GENERATED PLACEHOLDER VISUALS ============ */
+/* No external photo service — every thumbnail/avatar is a deterministic SVG gradient
+   generated locally, so there's never a risk of a random stock photo's own dark
+   region showing through (an issue with services like picsum.photos, which serve
+   arbitrary unrelated photographs). */
+function gradientThumb(colorA, colorB, angle){
+  const w = 500, h = 900;
+  const a = angle || 135;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <defs>
+      <linearGradient id="g" gradientTransform="rotate(${a})">
+        <stop offset="0%" stop-color="${colorA}"/>
+        <stop offset="100%" stop-color="${colorB}"/>
+      </linearGradient>
+    </defs>
+    <rect width="${w}" height="${h}" fill="url(#g)"/>
+    <circle cx="${w*0.82}" cy="${h*0.16}" r="${w*0.38}" fill="rgba(255,255,255,0.10)"/>
+    <circle cx="${w*0.08}" cy="${h*0.55}" r="${w*0.3}" fill="rgba(255,255,255,0.06)"/>
+  </svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+function gradientAvatar(initials, colorA, colorB){
+  const size = 200;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <defs>
+      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${colorA}"/>
+        <stop offset="100%" stop-color="${colorB}"/>
+      </linearGradient>
+    </defs>
+    <rect width="${size}" height="${size}" rx="${size*0.28}" fill="url(#g)"/>
+    <text x="50%" y="52%" font-family="Arial, sans-serif" font-size="${size*0.38}" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${initials}</text>
+  </svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+function gradientAvatarIcon(colorA, colorB){
+  const size = 200;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <defs>
+      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${colorA}"/>
+        <stop offset="100%" stop-color="${colorB}"/>
+      </linearGradient>
+    </defs>
+    <rect width="${size}" height="${size}" rx="${size*0.28}" fill="url(#g)"/>
+    <circle cx="${size/2}" cy="${size*0.38}" r="${size*0.16}" fill="rgba(255,255,255,0.85)"/>
+    <path d="M${size*0.24} ${size*0.82} Q${size/2} ${size*0.56} ${size*0.76} ${size*0.82} Z" fill="rgba(255,255,255,0.85)"/>
+  </svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+const GRADIENT_PAIRS = [
+  ['#6C4CE0', '#FF4D6D'], ['#14B8A6', '#6366F1'], ['#F59E0B', '#EC4899'],
+  ['#10B981', '#06B6D4'], ['#8B5CF6', '#D946EF'], ['#38BDF8', '#3B82F6'],
+  ['#FB7185', '#F97316'], ['#22D3EE', '#0EA5E9'], ['#A78BFA', '#F472B6'], ['#34D399', '#84CC16'],
+];
+
 const products = [
-  { id:1, seller:'Atölye Deri', category:'Aksesuar', caption:'El yapımı deri sırt çantası, günlük kullanım için ideal 🎒', img:'https://picsum.photos/seed/kk-bag/500/900', name:'Kraft Deri Sırt Çantası', price:1249, sizes:['Standart'], avatar:'https://picsum.photos/seed/seller1/100/100', likes:842, views:0, shares:0, sold:0, discount:null, stock:2, createdAt: Date.now() - 6*3600000, photos:['https://picsum.photos/seed/kk-bag/500/900','https://picsum.photos/seed/kk-bag2/500/900','https://picsum.photos/seed/kk-bag3/500/900'] },
-  { id:2, seller:'Nova Sneaker', category:'Ayakkabı', caption:'Yeni sezon koşu ayakkabısı, hafif ve nefes alan taban 👟', img:'https://picsum.photos/seed/kk-shoe/500/900', name:'Air Runner Spor Ayakkabı', price:1899, sizes:['40','41','42','43','44'], avatar:'https://picsum.photos/seed/seller2/100/100', likes:2130, views:0, shares:0, sold:0, discount:null, stock:18, createdAt: Date.now() - 5*3600000, photos:['https://picsum.photos/seed/kk-shoe/500/900','https://picsum.photos/seed/kk-shoe2/500/900','https://picsum.photos/seed/kk-shoe3/500/900','https://picsum.photos/seed/kk-shoe4/500/900'] },
-  { id:3, seller:'Mira Home', category:'Ev & Yaşam', caption:'Minimalist masaüstü aydınlatma, sıcak ışık tonu ✨', img:'https://picsum.photos/seed/kk-lamp/500/900', name:'Luna Masa Lambası', price:679, sizes:['Standart'], avatar:'https://picsum.photos/seed/seller3/100/100', likes:511, views:0, shares:0, sold:0, discount:null, stock:12, createdAt: Date.now() - 4*3600000, photos:['https://picsum.photos/seed/kk-lamp/500/900','https://picsum.photos/seed/kk-lamp2/500/900'] },
-  { id:4, seller:'Studio Kumaş', category:'Giyim', caption:'Organik pamuklu oversize tişört, 4 renk seçeneği 🌿', img:'https://picsum.photos/seed/kk-tshirt/500/900', name:'Oversize Basic Tişört', price:349, sizes:['S','M','L','XL'], avatar:'https://picsum.photos/seed/seller4/100/100', likes:1284, views:0, shares:0, sold:0, discount:null, stock:40, createdAt: Date.now() - 3*3600000, photos:['https://picsum.photos/seed/kk-tshirt/500/900','https://picsum.photos/seed/kk-tshirt2/500/900','https://picsum.photos/seed/kk-tshirt3/500/900'] },
-  { id:5, seller:'Nova Sneaker', category:'Aksesuar', caption:'Polarize cam, hafif titanyum çerçeve 🕶️', img:'https://picsum.photos/seed/kk-sunglass/500/900', name:'Retro Güneş Gözlüğü', price:549, sizes:['Standart'], avatar:'https://picsum.photos/seed/seller2/100/100', likes:698, views:0, shares:0, sold:0, discount:null, stock:22, createdAt: Date.now() - 2*3600000, photos:['https://picsum.photos/seed/kk-sunglass/500/900','https://picsum.photos/seed/kk-sunglass2/500/900'] },
-  { id:6, seller:'Studio Kumaş', category:'Elektronik', caption:'7 gün pil ömürlü, su geçirmez akıllı saat ⌚', img:'https://picsum.photos/seed/kk-watch/500/900', name:'Pulse Akıllı Saat', price:2149, sizes:['Standart'], avatar:'https://picsum.photos/seed/seller4/100/100', likes:963, views:0, shares:0, sold:0, discount:null, stock:9, createdAt: Date.now() - 1*3600000, photos:['https://picsum.photos/seed/kk-watch/500/900','https://picsum.photos/seed/kk-watch2/500/900','https://picsum.photos/seed/kk-watch3/500/900'] },
+  { id:1, seller:'Atölye Deri', category:'Aksesuar', caption:'El yapımı deri sırt çantası, günlük kullanım için ideal 🎒', img:gradientThumb(...GRADIENT_PAIRS[0], 135), name:'Kraft Deri Sırt Çantası', price:1249, sizes:['Standart'], avatar:gradientAvatar('AD','#6C4CE0','#FF4D6D'), likes:842, views:0, shares:0, sold:0, discount:null, stock:2, createdAt: Date.now() - 6*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[0], 135), gradientThumb(GRADIENT_PAIRS[0][1], GRADIENT_PAIRS[0][0], 45), gradientThumb(...GRADIENT_PAIRS[0], 200)] },
+  { id:2, seller:'Nova Sneaker', category:'Ayakkabı', caption:'Yeni sezon koşu ayakkabısı, hafif ve nefes alan taban 👟', img:gradientThumb(...GRADIENT_PAIRS[1], 135), name:'Air Runner Spor Ayakkabı', price:1899, sizes:['40','41','42','43','44'], avatar:gradientAvatar('NS','#14B8A6','#6366F1'), likes:2130, views:0, shares:0, sold:0, discount:null, stock:18, createdAt: Date.now() - 5*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[1], 135), gradientThumb(GRADIENT_PAIRS[1][1], GRADIENT_PAIRS[1][0], 45), gradientThumb(...GRADIENT_PAIRS[1], 200), gradientThumb(...GRADIENT_PAIRS[1], 300)] },
+  { id:3, seller:'Mira Home', category:'Ev & Yaşam', caption:'Minimalist masaüstü aydınlatma, sıcak ışık tonu ✨', img:gradientThumb(...GRADIENT_PAIRS[2], 135), name:'Luna Masa Lambası', price:679, sizes:['Standart'], avatar:gradientAvatar('MH','#F59E0B','#EC4899'), likes:511, views:0, shares:0, sold:0, discount:null, stock:12, createdAt: Date.now() - 4*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[2], 135), gradientThumb(GRADIENT_PAIRS[2][1], GRADIENT_PAIRS[2][0], 45)] },
+  { id:4, seller:'Studio Kumaş', category:'Giyim', caption:'Organik pamuklu oversize tişört, 4 renk seçeneği 🌿', img:gradientThumb(...GRADIENT_PAIRS[3], 135), name:'Oversize Basic Tişört', price:349, sizes:['S','M','L','XL'], avatar:gradientAvatar('SK','#10B981','#06B6D4'), likes:1284, views:0, shares:0, sold:0, discount:null, stock:40, createdAt: Date.now() - 3*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[3], 135), gradientThumb(GRADIENT_PAIRS[3][1], GRADIENT_PAIRS[3][0], 45), gradientThumb(...GRADIENT_PAIRS[3], 200)] },
+  { id:5, seller:'Nova Sneaker', category:'Aksesuar', caption:'Polarize cam, hafif titanyum çerçeve 🕶️', img:gradientThumb(...GRADIENT_PAIRS[4], 135), name:'Retro Güneş Gözlüğü', price:549, sizes:['Standart'], avatar:gradientAvatar('NS','#14B8A6','#6366F1'), likes:698, views:0, shares:0, sold:0, discount:null, stock:22, createdAt: Date.now() - 2*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[4], 135), gradientThumb(GRADIENT_PAIRS[4][1], GRADIENT_PAIRS[4][0], 45)] },
+  { id:6, seller:'Studio Kumaş', category:'Elektronik', caption:'7 gün pil ömürlü, su geçirmez akıllı saat ⌚', img:gradientThumb(...GRADIENT_PAIRS[5], 135), name:'Pulse Akıllı Saat', price:2149, sizes:['Standart'], avatar:gradientAvatar('SK','#10B981','#06B6D4'), likes:963, views:0, shares:0, sold:0, discount:null, stock:9, createdAt: Date.now() - 1*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[5], 135), gradientThumb(GRADIENT_PAIRS[5][1], GRADIENT_PAIRS[5][0], 45), gradientThumb(...GRADIENT_PAIRS[5], 200)] },
 ];
 
 const currentUser = { username: 'elif.yilmaz', name: 'Elif Yılmaz', initials: 'EY' };
@@ -1393,7 +1461,7 @@ function buildFeedCard(p, isFirst){
       </div>
       <div class="rail-btn" data-role="comment">
         <div class="rail-circle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
-        <div class="rail-label" data-role="commentcount">${commentsData[p.id].length}</div>
+        <div class="rail-label" data-role="commentcount">${totalCommentCount(p.id)}</div>
       </div>
       <div class="rail-btn" data-role="share">
         <div class="rail-circle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg></div>
@@ -1485,6 +1553,11 @@ function renderFeed(filterFn, scrollToProductId){
 }
 function openCategoryFeed(p){
   renderFeed(pr => pr.category === p.category, p.id);
+  switchTab('feed');
+}
+function openListFeed(list, startId){
+  feedFilterFn = null; // custom ordered list, not a simple category/seller filter
+  renderFeedList(list, startId);
   switchTab('feed');
 }
 function openSellerFeed(sellerName, productId){
@@ -1684,7 +1757,7 @@ function renderGrid(){
         <div class="grid-name">${p.name}</div>
         <div class="grid-price">${fmt(p.price)}</div>
       </div>`;
-    el.addEventListener('click', () => openCategoryFeed(p));
+    el.addEventListener('click', () => openListFeed(filtered, p.id));
     grid.appendChild(el);
   });
 }
@@ -1717,7 +1790,7 @@ function renderCart(){
         <div class="cart-item-sub">${item.size} · ${t('qty')}: ${item.qty}</div>
         <div class="cart-item-price">${fmt(effectivePrice * item.qty)}</div>
       </div>
-      <div class="cart-remove" data-idx="${idx}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      <div class="cart-remove" data-idx="${idx}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
     `;
     row.querySelector('.cart-remove').addEventListener('click', () => {
       cart.splice(idx, 1);
@@ -1946,12 +2019,12 @@ function renderAddresses(){
     const el = document.createElement('div');
     el.className = 'address-item';
     el.innerHTML = `
-      <div class="address-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div class="address-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
       <div>
         <div class="address-label">${a.label}</div>
         <div class="address-detail">${a.detail}</div>
       </div>
-      <div class="address-delete" data-idx="${idx}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
+      <div class="address-delete" data-idx="${idx}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
     el.querySelector('.address-delete').addEventListener('click', () => {
       addressesData.splice(idx, 1);
       renderAddresses();
@@ -2007,12 +2080,11 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 updateFollowStat();
 
 /* Avatar picker */
-const avatarPresetSeeds = ['av1','av2','av3','av4','av5','av6','av7','av8','av9','av10'];
 const presetGrid = document.getElementById('avatarPresets');
-avatarPresetSeeds.forEach(seed => {
+GRADIENT_PAIRS.forEach(pair => {
   const el = document.createElement('div');
   el.className = 'avatar-preset';
-  const url = `https://picsum.photos/seed/${seed}/100/100`;
+  const url = gradientAvatarIcon(pair[0], pair[1]);
   el.style.backgroundImage = `url('${url}')`;
   el.addEventListener('click', () => {
     [...presetGrid.children].forEach(c => c.classList.remove('selected'));
@@ -2205,8 +2277,9 @@ document.getElementById('addToCartBtn').addEventListener('click', () => {
 let activeCommentProductId = null;
 function openCommentSheet(productId){
   activeCommentProductId = productId;
+  clearReplyTarget();
   document.getElementById('commentSortPopover').style.display = 'none';
-  document.getElementById('commentTitle').textContent = `Yorumlar · ${commentsData[productId].length}`;
+  document.getElementById('commentTitle').textContent = `Yorumlar · ${totalCommentCount(productId)}`;
   renderComments();
   openSheetByName('comment');
 }
@@ -2232,10 +2305,40 @@ function sortedComments(productId){
   else list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
   return list;
 }
+function totalCommentCount(productId){
+  return commentsData[productId].reduce((sum, c) => sum + 1 + (c.replies ? c.replies.length : 0), 0);
+}
+function commentLikeRow(item, refreshFn){
+  const btn = document.createElement('div');
+  btn.className = 'comment-like-btn' + (item.likedByMe ? ' liked' : '');
+  btn.innerHTML = `
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+    <div class="comment-like-count">${item.likes || 0}</div>`;
+  btn.addEventListener('click', () => {
+    requireAuth(() => {
+      item.likedByMe = !item.likedByMe;
+      item.likes = (item.likes || 0) + (item.likedByMe ? 1 : -1);
+      refreshFn();
+    });
+  });
+  return btn;
+}
+let activeReplyTarget = null;
+function setReplyTarget(c){
+  activeReplyTarget = c;
+  const input = document.getElementById('commentInput');
+  input.placeholder = currentLang === 'tr' ? `@${c.author}'e yanıt yaz...` : `Reply to @${c.author}...`;
+  input.focus();
+}
+function clearReplyTarget(){
+  activeReplyTarget = null;
+  document.getElementById('commentInput').placeholder = currentLang === 'tr' ? 'Yorum yaz...' : 'Write a comment...';
+}
 function renderComments(){
   const list = document.getElementById('commentList');
   list.innerHTML = '';
   sortedComments(activeCommentProductId).forEach(c => {
+    if(!c.replies) c.replies = [];
     const el = document.createElement('div');
     el.className = 'comment-item';
     const avatarStyle = (c.isMe && profileAvatarUrl) ? `style="background-image:url('${profileAvatarUrl}')"` : '';
@@ -2248,19 +2351,33 @@ function renderComments(){
           <div>
             <div class="comment-author${c.isMe ? ' me' : ''}">${displayName}</div>
             <div class="comment-text">${c.text}</div>
-          </div>
-          <div class="comment-like-btn${c.likedByMe ? ' liked' : ''}" data-comment-ref="${commentsData[activeCommentProductId].indexOf(c)}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-            <div class="comment-like-count">${c.likes || 0}</div>
+            <div class="comment-reply-link" data-reply-btn="1">${currentLang === 'tr' ? 'Yanıtla' : 'Reply'}</div>
           </div>
         </div>
+        <div class="comment-replies" id="replies-${commentsData[activeCommentProductId].indexOf(c)}"></div>
       </div>`;
-    el.querySelector('.comment-like-btn').addEventListener('click', () => {
-      requireAuth(() => {
-        c.likedByMe = !c.likedByMe;
-        c.likes = (c.likes || 0) + (c.likedByMe ? 1 : -1);
-        renderComments();
-      });
+    el.querySelector('.comment-body-row').appendChild(commentLikeRow(c, renderComments));
+    el.querySelector('[data-reply-btn]').addEventListener('click', () => setReplyTarget(c));
+
+    const repliesEl = el.querySelector('.comment-replies');
+    c.replies.forEach(r => {
+      const rEl = document.createElement('div');
+      rEl.className = 'comment-item comment-reply-item';
+      const rAvatarStyle = (r.isMe && profileAvatarUrl) ? `style="background-image:url('${profileAvatarUrl}')"` : '';
+      const rAvatarInitial = (r.isMe && profileAvatarUrl) ? '' : (r.isMe ? currentUser.initials : r.author.slice(0,1).toUpperCase());
+      const rDisplayName = r.isMe ? 'Sen' : '@' + r.author;
+      rEl.innerHTML = `
+        <div class="comment-avatar" ${rAvatarStyle} style="width:26px; height:26px; font-size:10px;">${rAvatarInitial}</div>
+        <div style="flex:1;">
+          <div class="comment-body-row">
+            <div>
+              <div class="comment-author${r.isMe ? ' me' : ''}">${rDisplayName}</div>
+              <div class="comment-text">${r.text}</div>
+            </div>
+          </div>
+        </div>`;
+      rEl.querySelector('.comment-body-row').appendChild(commentLikeRow(r, renderComments));
+      repliesEl.appendChild(rEl);
     });
     list.appendChild(el);
   });
@@ -2270,12 +2387,19 @@ function submitComment(){
   const text = input.value.trim();
   if(!text) return;
   requireAuth(() => {
-    commentsData[activeCommentProductId].push({ author: currentUser.username, isMe: true, text, likes: 0, likedByMe: false, time: Date.now() });
+    if(activeReplyTarget){
+      if(!activeReplyTarget.replies) activeReplyTarget.replies = [];
+      activeReplyTarget.replies.push({ author: currentUser.username, isMe: true, text, likes: 0, likedByMe: false, time: Date.now() });
+      clearReplyTarget();
+    } else {
+      commentsData[activeCommentProductId].push({ author: currentUser.username, isMe: true, text, likes: 0, likedByMe: false, time: Date.now(), replies: [] });
+    }
     input.value = '';
     renderComments();
-    document.getElementById('commentTitle').textContent = `Yorumlar · ${commentsData[activeCommentProductId].length}`;
+    const count = totalCommentCount(activeCommentProductId);
+    document.getElementById('commentTitle').textContent = `Yorumlar · ${count}`;
     const card = [...document.querySelectorAll('.card')][products.findIndex(p => p.id === activeCommentProductId)];
-    if(card) card.querySelector('[data-role="commentcount"]').textContent = commentsData[activeCommentProductId].length;
+    if(card) card.querySelector('[data-role="commentcount"]').textContent = count;
   });
 }
 document.getElementById('commentSend').addEventListener('click', submitComment);
@@ -2747,13 +2871,14 @@ function submitListing(){
 }
 
 function publishListingToFeed(listing){
+  const fallbackPair = GRADIENT_PAIRS[listing.id % GRADIENT_PAIRS.length];
   const productData = {
     id: 9000 + listing.id, seller: currentUser.name, category: listing.category,
-    caption: listing.caption || listing.name, img: listing.thumb || `https://picsum.photos/seed/kk${listing.id}/500/900`,
+    caption: listing.caption || listing.name, img: listing.thumb || gradientThumb(fallbackPair[0], fallbackPair[1], 135),
     name: listing.name, price: listing.price, sizes: listing.sizes.length ? listing.sizes : ['Standart'],
-    avatar: profileAvatarUrl || `https://picsum.photos/seed/${currentUser.username}/100/100`,
+    avatar: profileAvatarUrl || gradientAvatar(currentUser.initials, fallbackPair[0], fallbackPair[1]),
     likes: 0, views: 0, shares: 0, videoUrl: listing.videoUrl || null,
-    stock: listing.stock, createdAt: Date.now(), photos: listing.photos || [],
+    stock: listing.stock, createdAt: Date.now(), photos: listing.photos && listing.photos.length ? listing.photos : [listing.thumb || gradientThumb(fallbackPair[0], fallbackPair[1], 135)],
   };
   listing.publishedProductId = productData.id;
   products.push(productData);
@@ -2951,7 +3076,7 @@ function renderChatAttachmentPreview(){
   bar.innerHTML = `
     <div class="chat-attach-thumb" style="background-image:url('${pendingChatAttachment.img}')"></div>
     <div class="chat-attach-name">${pendingChatAttachment.name}</div>
-    <div class="chat-attach-remove" id="chatAttachRemove"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F5F1FF" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
+    <div class="chat-attach-remove" id="chatAttachRemove"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
   document.getElementById('chatAttachRemove').addEventListener('click', () => { pendingChatAttachment = null; renderChatAttachmentPreview(); });
 }
 function sendChatMessage(){
@@ -3219,6 +3344,10 @@ document.getElementById('saveDiscountBtn').addEventListener('click', () => {
   const val = Number(document.getElementById('discountInput').value);
   if(!val || val <= 0 || val >= product.price){
     showToast(currentLang==='tr' ? 'İndirimli fiyat orijinal fiyattan düşük olmalı' : 'Discounted price must be lower than the original price');
+    return;
+  }
+  if(val < MIN_PRICE){
+    showToast(currentLang==='tr' ? `İndirimli fiyat en az ₺${MIN_PRICE} olmalı` : `Discounted price must be at least ₺${MIN_PRICE}`);
     return;
   }
   product.discount = { price: val, appliedAt: Date.now() };
