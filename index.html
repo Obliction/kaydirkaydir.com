@@ -334,8 +334,11 @@
   .address-form input::placeholder{ color:var(--text-dim); }
 
   /* Auth screen */
-  .auth-screen{ position:absolute; inset:0; z-index:200; background:var(--bg); display:flex; flex-direction:column; padding:54px 24px 30px; overflow-y:auto; transform:translateY(0); transition:transform .38s cubic-bezier(.32,.72,0,1); }
-  .auth-screen.hidden{ transform:translateY(100%); pointer-events:none; }
+  .auth-screen{ position:absolute; inset:0; z-index:200; background:var(--bg); display:flex; flex-direction:column; padding:54px 24px 30px; overflow-y:auto; transform:translateY(0); opacity:1; transition:transform .55s cubic-bezier(.22,.61,.15,1), opacity .45s ease; }
+  .auth-screen.hidden{ transform:translateY(100%); opacity:0; pointer-events:none; }
+  /* The login/signup gate (not chat or upload, which reuse .auth-screen too) shows the feed dimmed behind it instead of a solid backdrop */
+  #authScreen{ background:rgba(12,8,22,0.38); align-items:center; justify-content:center; padding:24px; }
+  .auth-card{ width:100%; max-width:340px; max-height:100%; overflow-y:auto; background:var(--panel); border-radius:28px; padding:34px 22px 22px; box-shadow:0 24px 64px -12px rgba(0,0,0,0.55), 0 4px 18px rgba(0,0,0,0.3); }
   .auth-logo{ text-align:center; margin-bottom:6px; font-family:'Space Grotesk'; font-size:24px; font-weight:700; }
   .auth-logo span:first-child{ color:var(--accent); }
   .auth-logo span:last-child{ color:var(--text); opacity:0.55; }
@@ -492,6 +495,7 @@
 
       <!-- Auth screen (login / signup / verify) -->
       <div class="auth-screen hidden" id="authScreen">
+        <div class="auth-card">
         <div class="auth-logo"><span>kaydır</span><span>kaydır</span></div>
         <div class="auth-sub" id="authSubtitle">Video izle, beğen, anında satın al</div>
 
@@ -536,6 +540,7 @@
         </div>
 
         <div class="auth-guest-link" id="guestBrowseBtn">Misafir olarak gezin</div>
+        </div>
       </div>
 
       <!-- Seller upload flow -->
@@ -584,10 +589,18 @@
               <div id="videoDropContent">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="16" rx="2"/><polygon points="16 9 22 6 22 18 16 15"/></svg>
                 <div class="video-drop-text" id="videoDropText">Video seçmek için dokun</div>
-                <div class="video-drop-sub" id="videoDropSub">MP4, MOV — maks. 60 sn önerilir</div>
+                <div class="video-drop-sub" id="videoDropSub">MP4, MOV — en fazla 60 sn</div>
               </div>
             </div>
             <div class="field-error" id="videoError">Video yüklemediniz, lütfen devam etmeden önce bir video seç.</div>
+            <div class="field-error" id="videoDurationError">Bu video 60 saniyeden uzun görünüyor — 60 sn altı videolar akışta daha iyi performans gösterir.</div>
+            <div id="thumbPickerWrap" style="display:none; margin-top:14px;">
+              <label class="auth-field-label" id="thumbPickerLabel">Kapak fotoğrafı için bir kare seç</label>
+              <input type="range" id="thumbFrameSlider" min="0" max="1" step="0.01" value="0" style="width:100%; accent-color:var(--accent);">
+              <div class="add-photo-btn" id="useThisFrameBtn" style="text-align:center; margin-top:8px;">
+                <span id="txtUseThisFrame">Bu kareyi kapak yap</span>
+              </div>
+            </div>
             <input type="file" id="videoFileInput" accept="video/*" style="display:none;">
           </div>
 
@@ -1235,7 +1248,9 @@ const STATIC_TEXT = {
   cancelDiscountBtn: ['Vazgeç','Cancel'], saveDiscountBtn: ['Uygula','Apply'], removeDiscountBtn: ['İndirimi Kaldır','Remove Discount'],
   txtSellerReviewsLabel: ['Değerlendirmeler','Reviews'],
   uploadStep1Title: ['Tanıtım Videosu','Promo Video'], uploadStep1Sub: ['Ürününü en iyi anlatan kısa bir video seç','Choose a short video that shows your product best'],
-  videoDropText: ['Video seçmek için dokun','Tap to choose a video'], videoDropSub: ['MP4, MOV — maks. 60 sn önerilir','MP4, MOV — 60 sec max recommended'],
+  videoDropText: ['Video seçmek için dokun','Tap to choose a video'], videoDropSub: ['MP4, MOV — en fazla 60 sn','MP4, MOV — 60 sec max'],
+  videoDurationError: ['Bu video 60 saniyeden uzun görünüyor — 60 sn altı videolar akışta daha iyi performans gösterir.','This video looks longer than 60 seconds — videos under 60 sec tend to perform better in the feed.'],
+  thumbPickerLabel: ['Kapak fotoğrafı için bir kare seç','Pick a frame for the cover photo'], txtUseThisFrame: ['Bu kareyi kapak yap','Use this frame as cover'],
   videoError: ['Video yüklemediniz, lütfen devam etmeden önce bir video seç.','You have not uploaded a video — please pick one before continuing.'],
   uploadStep2Title: ['Ürün Bilgileri','Product Info'], uploadStep2Sub: ['Alıcıların göreceği başlık ve açıklama','The title and description buyers will see'],
   uploadNameLabel: ['Ürün Adı','Product Name'], nameError: ['Lütfen ürün adını gir.','Please enter a product name.'],
@@ -1323,6 +1338,9 @@ function requireAuth(action){
 }
 
 document.getElementById('guestBrowseBtn').addEventListener('click', closeAuthScreen);
+document.getElementById('authScreen').addEventListener('click', (e) => {
+  if(e.target.id === 'authScreen') closeAuthScreen();
+});
 document.getElementById('guestLoginBtn').addEventListener('click', () => openAuthScreen('login'));
 document.getElementById('guestSignupBtn').addEventListener('click', () => openAuthScreen('signup'));
 
@@ -2692,7 +2710,8 @@ function openUploadScreen(){
   document.getElementById('videoDropContent').style.display = 'flex';
   document.getElementById('videoPreview').style.display = 'none';
   document.getElementById('videoFileInput').value = '';
-  ['videoError','nameError','priceError','stockError','shipSizeError','categoryError'].forEach(id => document.getElementById(id).classList.remove('show'));
+  document.getElementById('thumbPickerWrap').style.display = 'none';
+  ['videoError','videoDurationError','nameError','priceError','stockError','shipSizeError','categoryError'].forEach(id => document.getElementById(id).classList.remove('show'));
   renderUploadCategoryChips();
   renderUploadSizeChips();
   renderShipSizeChips();
@@ -2722,31 +2741,59 @@ function goToUploadStep(step){
 }
 
 document.getElementById('videoDropZone').addEventListener('click', () => document.getElementById('videoFileInput').click());
+function captureCurrentFrameAsThumb(video){
+  try{
+    const canvas = document.getElementById('thumbCanvas');
+    canvas.width = video.videoWidth || 400;
+    canvas.height = video.videoHeight || 700;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    uploadData.thumbDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  }catch(err){ /* thumbnail capture failed, will fall back to a placeholder */ }
+}
 document.getElementById('videoFileInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
   const url = URL.createObjectURL(file);
-  uploadData.videoObjectUrl = url;
-  document.getElementById('videoError').classList.remove('show');
   const video = document.getElementById('videoPreview');
+  document.getElementById('videoError').classList.remove('show');
+  document.getElementById('videoDurationError').classList.remove('show');
+
+  // Accept the file right away — this is the reliable part that always worked.
+  // Duration checking below is a non-blocking, best-effort layer on top of it:
+  // if a browser can't report a clean number for some file, we never let that
+  // stop the seller from uploading (a missed soft-limit check is far less
+  // annoying than a video that silently refuses to upload at all).
+  uploadData.videoObjectUrl = url;
   video.src = url;
   video.style.display = 'block';
   document.getElementById('videoDropContent').style.display = 'none';
   document.getElementById('videoDropZone').classList.add('filled');
-  video.addEventListener('loadeddata', () => {
-    video.currentTime = Math.min(0.3, (video.duration || 1) / 4);
+  document.getElementById('thumbPickerWrap').style.display = 'block';
+
+  video.addEventListener('loadedmetadata', () => {
+    const dur = isFinite(video.duration) ? video.duration : 0;
+    if(dur > 60) document.getElementById('videoDurationError').classList.add('show');
+    const slider = document.getElementById('thumbFrameSlider');
+    slider.min = 0;
+    slider.max = dur || 1;
+    video.currentTime = Math.min(0.3, (dur || 1) / 4);
+    slider.value = video.currentTime;
   }, { once:true });
   video.addEventListener('seeked', () => {
-    try{
-      const canvas = document.getElementById('thumbCanvas');
-      canvas.width = video.videoWidth || 400;
-      canvas.height = video.videoHeight || 700;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      uploadData.thumbDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    }catch(err){ /* thumbnail capture failed, will fall back to a placeholder */ }
+    captureCurrentFrameAsThumb(video);
     video.play().catch(() => {});
   }, { once:true });
+});
+document.getElementById('thumbFrameSlider').addEventListener('input', (e) => {
+  const video = document.getElementById('videoPreview');
+  video.pause();
+  video.currentTime = Number(e.target.value);
+});
+document.getElementById('useThisFrameBtn').addEventListener('click', () => {
+  const video = document.getElementById('videoPreview');
+  captureCurrentFrameAsThumb(video);
+  showToast(currentLang==='tr' ? 'Kapak fotoğrafı güncellendi 📸' : 'Cover photo updated 📸');
 });
 
 function renderUploadCategoryChips(){
