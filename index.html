@@ -396,6 +396,9 @@
   .field-error.show{ display:block; }
   .shipping-note{ font-size:12px; color:var(--gold); background:var(--accent-dim); border-radius:14px; padding:12px 15px; line-height:1.5; margin-bottom:12px; font-weight:600; }
   .earnings-note{ font-size:11.5px; color:var(--success); background:rgba(74,222,128,0.1); border-radius:14px; padding:12px 15px; line-height:1.6; margin-bottom:12px; font-weight:600; }
+  .ship-origin-note{ font-size:12.5px; color:var(--text-dim); margin:6px 0 14px; font-weight:500; }
+  .ship-origin-pill{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-dim); background:var(--panel); border-radius:20px; padding:8px 13px; margin-bottom:14px; cursor:pointer; font-weight:600; }
+  #shipOriginSheet{ z-index:210; }
 
   /* Listing stats row */
   .listing-stats{ display:flex; gap:12px; margin-top:6px; }
@@ -583,6 +586,7 @@
           <div class="upload-step active" id="uploadStep1">
             <div class="upload-step-title" id="uploadStep1Title">Tanıtım Videosu</div>
             <div class="upload-step-sub" id="uploadStep1Sub">Ürününü en iyi anlatan kısa bir video seç</div>
+            <div class="ship-origin-pill" id="uploadShipOriginPill">📦 <span id="uploadShipOriginText">—</span> · <span id="uploadShipOriginEdit" style="text-decoration:underline;">Değiştir</span></div>
             <div class="video-drop-zone" id="videoDropZone">
               <video id="videoPreview" class="video-preview-el" style="display:none;" muted loop playsinline></video>
               <canvas id="thumbCanvas" style="display:none;"></canvas>
@@ -829,6 +833,23 @@
 
       <div class="toast" id="toast">Sepete eklendi</div>
 
+      <!-- Seller shipping origin (asked once before the first upload, editable afterward) -->
+      <div class="sheet" id="shipOriginSheet">
+        <div class="sheet-handle"></div>
+        <div class="comment-sheet-title" id="shipOriginTitle">Gönderim Adresi</div>
+        <div class="upload-step-sub" id="shipOriginSub" style="margin-bottom:16px;">Ürünlerin nereden gönderileceğini alıcılar üstün körü görsün. İl/ilçe yeterli, açık adres gerekmiyor.</div>
+        <label class="auth-field-label" id="shipOriginIlLabel">İl</label>
+        <select class="auth-input" id="shipOriginIl">
+          <option value="" id="shipOriginIlPlaceholder">İl seç</option>
+        </select>
+        <label class="auth-field-label" id="shipOriginIlceLabel">İlçe</label>
+        <select class="auth-input" id="shipOriginIlce" disabled>
+          <option value="" id="shipOriginIlcePlaceholder">Önce il seç</option>
+        </select>
+        <div class="field-error" id="shipOriginError">Lütfen il ve ilçe gir.</div>
+        <div class="auth-primary-btn" id="shipOriginSaveBtn">Kaydet ve Devam Et</div>
+      </div>
+
       <!-- Product sheet -->
       <div class="sheet-overlay" id="overlay"></div>
       <div class="sheet" id="productSheet">
@@ -841,6 +862,7 @@
             <div class="sheet-price" id="sheetPrice">₺0</div>
           </div>
         </div>
+        <div class="ship-origin-note" id="sheetShipOrigin"></div>
         <div class="field-label" id="txtSizeLabel">Beden</div>
         <div class="option-row" id="sizeRow"></div>
         <div class="field-label" id="txtQtyLabel">Adet</div>
@@ -1193,15 +1215,15 @@ const GRADIENT_PAIRS = [
 ];
 
 const products = [
-  { id:1, seller:'Atölye Deri', category:'Aksesuar', caption:'El yapımı deri sırt çantası, günlük kullanım için ideal 🎒', img:gradientThumb(...GRADIENT_PAIRS[0], 135), name:'Kraft Deri Sırt Çantası', price:1249, sizes:['Standart'], avatar:gradientAvatar('AD','#6C4CE0','#FF4D6D'), likes:842, views:0, shares:0, sold:0, discount:null, stock:2, createdAt: Date.now() - 6*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[0], 135), gradientThumb(GRADIENT_PAIRS[0][1], GRADIENT_PAIRS[0][0], 45), gradientThumb(...GRADIENT_PAIRS[0], 200)] },
-  { id:2, seller:'Nova Sneaker', category:'Ayakkabı', caption:'Yeni sezon koşu ayakkabısı, hafif ve nefes alan taban 👟', img:gradientThumb(...GRADIENT_PAIRS[1], 135), name:'Air Runner Spor Ayakkabı', price:1899, sizes:['40','41','42','43','44'], avatar:gradientAvatar('NS','#14B8A6','#6366F1'), likes:2130, views:0, shares:0, sold:0, discount:null, stock:18, createdAt: Date.now() - 5*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[1], 135), gradientThumb(GRADIENT_PAIRS[1][1], GRADIENT_PAIRS[1][0], 45), gradientThumb(...GRADIENT_PAIRS[1], 200), gradientThumb(...GRADIENT_PAIRS[1], 300)] },
-  { id:3, seller:'Mira Home', category:'Ev & Yaşam', caption:'Minimalist masaüstü aydınlatma, sıcak ışık tonu ✨', img:gradientThumb(...GRADIENT_PAIRS[2], 135), name:'Luna Masa Lambası', price:679, sizes:['Standart'], avatar:gradientAvatar('MH','#F59E0B','#EC4899'), likes:511, views:0, shares:0, sold:0, discount:null, stock:12, createdAt: Date.now() - 4*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[2], 135), gradientThumb(GRADIENT_PAIRS[2][1], GRADIENT_PAIRS[2][0], 45)] },
-  { id:4, seller:'Studio Kumaş', category:'Giyim', caption:'Organik pamuklu oversize tişört, 4 renk seçeneği 🌿', img:gradientThumb(...GRADIENT_PAIRS[3], 135), name:'Oversize Basic Tişört', price:349, sizes:['S','M','L','XL'], avatar:gradientAvatar('SK','#10B981','#06B6D4'), likes:1284, views:0, shares:0, sold:0, discount:null, stock:40, createdAt: Date.now() - 3*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[3], 135), gradientThumb(GRADIENT_PAIRS[3][1], GRADIENT_PAIRS[3][0], 45), gradientThumb(...GRADIENT_PAIRS[3], 200)] },
-  { id:5, seller:'Nova Sneaker', category:'Aksesuar', caption:'Polarize cam, hafif titanyum çerçeve 🕶️', img:gradientThumb(...GRADIENT_PAIRS[4], 135), name:'Retro Güneş Gözlüğü', price:549, sizes:['Standart'], avatar:gradientAvatar('NS','#14B8A6','#6366F1'), likes:698, views:0, shares:0, sold:0, discount:null, stock:22, createdAt: Date.now() - 2*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[4], 135), gradientThumb(GRADIENT_PAIRS[4][1], GRADIENT_PAIRS[4][0], 45)] },
-  { id:6, seller:'Studio Kumaş', category:'Elektronik', caption:'7 gün pil ömürlü, su geçirmez akıllı saat ⌚', img:gradientThumb(...GRADIENT_PAIRS[5], 135), name:'Pulse Akıllı Saat', price:2149, sizes:['Standart'], avatar:gradientAvatar('SK','#10B981','#06B6D4'), likes:963, views:0, shares:0, sold:0, discount:null, stock:9, createdAt: Date.now() - 1*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[5], 135), gradientThumb(GRADIENT_PAIRS[5][1], GRADIENT_PAIRS[5][0], 45), gradientThumb(...GRADIENT_PAIRS[5], 200)] },
+  { id:1, seller:'Atölye Deri', category:'Aksesuar', caption:'El yapımı deri sırt çantası, günlük kullanım için ideal 🎒', img:gradientThumb(...GRADIENT_PAIRS[0], 135), name:'Kraft Deri Sırt Çantası', price:1249, sizes:['Standart'], avatar:gradientAvatar('AD','#6C4CE0','#FF4D6D'), likes:842, views:0, shares:0, sold:0, discount:null, stock:2, createdAt: Date.now() - 6*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[0], 135), gradientThumb(GRADIENT_PAIRS[0][1], GRADIENT_PAIRS[0][0], 45), gradientThumb(...GRADIENT_PAIRS[0], 200)] , shipOrigin:{il:'İstanbul', ilce:'Zeytinburnu'} },
+  { id:2, seller:'Nova Sneaker', category:'Ayakkabı', caption:'Yeni sezon koşu ayakkabısı, hafif ve nefes alan taban 👟', img:gradientThumb(...GRADIENT_PAIRS[1], 135), name:'Air Runner Spor Ayakkabı', price:1899, sizes:['40','41','42','43','44'], avatar:gradientAvatar('NS','#14B8A6','#6366F1'), likes:2130, views:0, shares:0, sold:0, discount:null, stock:18, createdAt: Date.now() - 5*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[1], 135), gradientThumb(GRADIENT_PAIRS[1][1], GRADIENT_PAIRS[1][0], 45), gradientThumb(...GRADIENT_PAIRS[1], 200), gradientThumb(...GRADIENT_PAIRS[1], 300)] , shipOrigin:{il:'İzmir', ilce:'Bornova'} },
+  { id:3, seller:'Mira Home', category:'Ev & Yaşam', caption:'Minimalist masaüstü aydınlatma, sıcak ışık tonu ✨', img:gradientThumb(...GRADIENT_PAIRS[2], 135), name:'Luna Masa Lambası', price:679, sizes:['Standart'], avatar:gradientAvatar('MH','#F59E0B','#EC4899'), likes:511, views:0, shares:0, sold:0, discount:null, stock:12, createdAt: Date.now() - 4*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[2], 135), gradientThumb(GRADIENT_PAIRS[2][1], GRADIENT_PAIRS[2][0], 45)] , shipOrigin:{il:'Bursa', ilce:'Nilüfer'} },
+  { id:4, seller:'Studio Kumaş', category:'Giyim', caption:'Organik pamuklu oversize tişört, 4 renk seçeneği 🌿', img:gradientThumb(...GRADIENT_PAIRS[3], 135), name:'Oversize Basic Tişört', price:349, sizes:['S','M','L','XL'], avatar:gradientAvatar('SK','#10B981','#06B6D4'), likes:1284, views:0, shares:0, sold:0, discount:null, stock:40, createdAt: Date.now() - 3*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[3], 135), gradientThumb(GRADIENT_PAIRS[3][1], GRADIENT_PAIRS[3][0], 45), gradientThumb(...GRADIENT_PAIRS[3], 200)] , shipOrigin:{il:'Denizli', ilce:'Merkezefendi'} },
+  { id:5, seller:'Nova Sneaker', category:'Aksesuar', caption:'Polarize cam, hafif titanyum çerçeve 🕶️', img:gradientThumb(...GRADIENT_PAIRS[4], 135), name:'Retro Güneş Gözlüğü', price:549, sizes:['Standart'], avatar:gradientAvatar('NS','#14B8A6','#6366F1'), likes:698, views:0, shares:0, sold:0, discount:null, stock:22, createdAt: Date.now() - 2*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[4], 135), gradientThumb(GRADIENT_PAIRS[4][1], GRADIENT_PAIRS[4][0], 45)] , shipOrigin:{il:'İzmir', ilce:'Bornova'} },
+  { id:6, seller:'Studio Kumaş', category:'Elektronik', caption:'7 gün pil ömürlü, su geçirmez akıllı saat ⌚', img:gradientThumb(...GRADIENT_PAIRS[5], 135), name:'Pulse Akıllı Saat', price:2149, sizes:['Standart'], avatar:gradientAvatar('SK','#10B981','#06B6D4'), likes:963, views:0, shares:0, sold:0, discount:null, stock:9, createdAt: Date.now() - 1*3600000, photos:[gradientThumb(...GRADIENT_PAIRS[5], 135), gradientThumb(GRADIENT_PAIRS[5][1], GRADIENT_PAIRS[5][0], 45), gradientThumb(...GRADIENT_PAIRS[5], 200)] , shipOrigin:{il:'Denizli', ilce:'Merkezefendi'} },
 ];
 
-const currentUser = { username: 'elif.yilmaz', name: 'Elif Yılmaz', initials: 'EY' };
+const currentUser = { username: 'elif.yilmaz', name: 'Elif Yılmaz', initials: 'EY', shipOrigin: null };
 let profileAvatarUrl = null;
 let currentLang = 'tr';
 
@@ -1261,6 +1283,13 @@ const STATIC_TEXT = {
   uploadCategoryLabel: ['Kategori','Category'], categoryError: ['Lütfen bir kategori seç.','Please choose a category.'], uploadSizeLabel: ['Beden Seçenekleri','Size Options'],
   uploadStep4Title: ['Önizleme','Preview'], uploadStep4Sub: ['Akışta böyle görünecek — göndermeden önce kontrol et','This is how it will look in the feed — check it before submitting'],
   pendingNote: ['Gönderdikten sonra ürünün admin onayına düşecek, onaylanınca akışta yayınlanacak.','After submitting, your product goes to admin review — it will go live in the feed once approved.'],
+  shipOriginTitle: ['Gönderim Adresi','Shipping Origin'],
+  shipOriginSub: ['Ürünlerin nereden gönderileceğini alıcılar üstün körü görsün. İl/ilçe yeterli, açık adres gerekmiyor.','Let buyers get a rough idea where your products ship from. City/district is enough — no need for a full address.'],
+  shipOriginIlLabel: ['İl','Province'], shipOriginIlceLabel: ['İlçe','District'],
+  shipOriginIlPlaceholder: ['İl seç','Choose province'], shipOriginIlcePlaceholder: ['Önce il seç','Choose province first'],
+  shipOriginError: ['Lütfen il ve ilçe gir.','Please enter both a province and district.'],
+  shipOriginSaveBtn: ['Kaydet ve Devam Et','Save and Continue'],
+  uploadShipOriginEdit: ['Değiştir','Change'],
 };
 const PLACEHOLDER_TEXT = {
   searchInput: ['Ürün ya da marka ara...','Search products or brands...'],
@@ -1729,6 +1758,9 @@ document.getElementById('cartBtnTop').addEventListener('click', () => switchTab(
 
 /* ---------- SEARCH TAB ---------- */
 const ALL_CATEGORIES = ['Giyim','Ayakkabı','Aksesuar','Elektronik','Ev & Yaşam','Kozmetik','Spor & Outdoor','Anne & Bebek','Kitap & Kırtasiye','Mutfak & Yemek','Pet Shop'];
+// All 81 Turkish provinces mapped to their districts (both alphabetically sorted), used by the
+// seller shipping-origin picker so sellers choose from a real, complete list instead of free text.
+const IL_ILCE_DATA = {"Adana":["Aladağ","Ceyhan","Çukurova","Feke","İmamoğlu","Karaisalı","Karataş","Kozan","Pozantı","Saimbeyli","Sarıçam","Seyhan","Tufanbeyli","Yumurtalık","Yüreğir"],"Adıyaman":["Besni","Çelikhan","Gerger","Gölbaşı","Kahta","Merkez","Samsat","Sincik","Tut"],"Afyonkarahisar":["Başmakçı","Bayat","Bolvadin","Çay","Çobanlar","Dazkırı","Dinar","Emirdağ","Evciler","Hocalar","İhsaniye","İscehisar","Kızılören","Merkez","Sandıklı","Sinanpaşa","Sultandağı","Şuhut"],"Ağrı":["Diyadin","Doğubayazıt","Eleşkirt","Hamur","Merkez","Patnos","Taşlıçay","Tutak"],"Aksaray":["Ağaçören","Eskil","Gülağaç","Güzelyurt","Merkez","Ortaköy","Sarıyahşi","Sultanhanı"],"Amasya":["Göynücek","Gümüşhacıköy","Hamamözü","Merkez","Merzifon","Suluova","Taşova"],"Ankara":["Akyurt","Altındağ","Ayaş","Bala","Beypazarı","Çamlıdere","Çankaya","Çubuk","Elmadağ","Etimesgut","Evren","Gölbaşı","Güdül","Haymana","Kahramankazan","Kalecik","Keçiören","Kızılcahamam","Mamak","Nallıhan","Polatlı","Pursaklar","Sincan","Şereflikoçhisar","Yenimahalle"],"Antalya":["Akseki","Aksu","Alanya","Demre","Döşemealtı","Elmalı","Finike","Gazipaşa","Gündoğmuş","İbradı","Kaş","Kemer","Kepez","Konyaaltı","Korkuteli","Kumluca","Manavgat","Muratpaşa","Serik"],"Ardahan":["Çıldır","Damal","Göle","Hanak","Merkez","Posof"],"Artvin":["Ardanuç","Arhavi","Borçka","Hopa","Kemalpaşa","Merkez","Murgul","Şavşat","Yusufeli"],"Aydın":["Bozdoğan","Buharkent","Çine","Didim","Efeler","Germencik","İncirliova","Karacasu","Karpuzlu","Koçarlı","Köşk","Kuşadası","Kuyucak","Nazilli","Söke","Sultanhisar","Yenipazar"],"Balıkesir":["Altıeylül","Ayvalık","Balya","Bandırma","Bigadiç","Burhaniye","Dursunbey","Edremit","Erdek","Gömeç","Gönen","Havran","İvrindi","Karesi","Kepsut","Manyas","Marmara","Savaştepe","Sındırgı","Susurluk"],"Bartın":["Amasra","Kurucaşile","Merkez","Ulus"],"Batman":["Beşiri","Gercüş","Hasankeyf","Kozluk","Merkez","Sason"],"Bayburt":["Aydıntepe","Demirözü","Merkez"],"Bilecik":["Bozüyük","Gölpazarı","İnhisar","Merkez","Osmaneli","Pazaryeri","Söğüt","Yenipazar"],"Bingöl":["Adaklı","Genç","Karlıova","Kiğı","Merkez","Solhan","Yayladere","Yedisu"],"Bitlis":["Adilcevaz","Ahlat","Güroymak","Hizan","Merkez","Mutki","Tatvan"],"Bolu":["Dörtdivan","Gerede","Göynük","Kıbrıscık","Mengen","Merkez","Mudurnu","Seben","Yeniçağa"],"Burdur":["Ağlasun","Altınyayla","Bucak","Çavdır","Çeltikçi","Gölhisar","Karamanlı","Kemer","Merkez","Tefenni","Yeşilova"],"Bursa":["Büyükorhan","Gemlik","Gürsu","Harmancık","İnegöl","İznik","Karacabey","Keles","Kestel","Mudanya","Mustafakemalpaşa","Nilüfer","Orhaneli","Orhangazi","Osmangazi","Yenişehir","Yıldırım"],"Çanakkale":["Ayvacık","Bayramiç","Biga","Bozcaada","Çan","Eceabat","Ezine","Gelibolu","Gökçeada","Lapseki","Merkez","Yenice"],"Çankırı":["Atkaracalar","Bayramören","Çerkeş","Eldivan","Ilgaz","Kızılırmak","Korgun","Kurşunlu","Merkez","Orta","Şabanözü","Yapraklı"],"Çorum":["Alaca","Bayat","Boğazkale","Dodurga","İskilip","Kargı","Laçin","Mecitözü","Merkez","Oğuzlar","Ortaköy","Osmancık","Sungurlu","Uğurludağ"],"Denizli":["Acıpayam","Babadağ","Baklan","Bekilli","Beyağaç","Bozkurt","Buldan","Çal","Çameli","Çardak","Çivril","Güney","Honaz","Kale","Merkezefendi","Pamukkale","Sarayköy","Serinhisar","Tavas"],"Diyarbakır":["Bağlar","Bismil","Çermik","Çınar","Çüngüş","Dicle","Eğil","Ergani","Hani","Hazro","Kayapınar","Kocaköy","Kulp","Lice","Silvan","Sur","Yenişehir"],"Düzce":["Akçakoca","Cumayeri","Çilimli","Gölyaka","Gümüşova","Kaynaşlı","Merkez","Yığılca"],"Edirne":["Enez","Havsa","İpsala","Keşan","Lalapaşa","Meriç","Merkez","Süloğlu","Uzunköprü"],"Elazığ":["Ağın","Alacakaya","Arıcak","Baskil","Karakoçan","Keban","Kovancılar","Maden","Merkez","Palu","Sivrice"],"Erzincan":["Çayırlı","İliç","Kemah","Kemaliye","Merkez","Otlukbeli","Refahiye","Tercan","Üzümlü"],"Erzurum":["Aşkale","Aziziye","Çat","Hınıs","Horasan","İspir","Karaçoban","Karayazı","Köprüköy","Narman","Oltu","Olur","Palandöken","Pasinler","Pazaryolu","Şenkaya","Tekman","Tortum","Uzundere","Yakutiye"],"Eskişehir":["Alpu","Beylikova","Çifteler","Günyüzü","Han","İnönü","Mahmudiye","Mihalgazi","Mihalıççık","Odunpazarı","Sarıcakaya","Seyitgazi","Sivrihisar","Tepebaşı"],"Gaziantep":["Araban","İslahiye","Karkamış","Nizip","Nurdağı","Oğuzeli","Şahinbey","Şehitkamil","Yavuzeli"],"Giresun":["Alucra","Bulancak","Çamoluk","Çanakçı","Dereli","Doğankent","Espiye","Eynesil","Görele","Güce","Keşap","Merkez","Piraziz","Şebinkarahisar","Tirebolu","Yağlıdere"],"Gümüşhane":["Kelkit","Köse","Kürtün","Merkez","Şiran","Torul"],"Hakkari":["Çukurca","Derecik","Merkez","Şemdinli","Yüksekova"],"Hatay":["Altınözü","Antakya","Arsuz","Belen","Defne","Dörtyol","Erzin","Hassa","İskenderun","Kırıkhan","Kumlu","Payas","Reyhanlı","Samandağ","Yayladağı"],"Iğdır":["Aralık","Karakoyunlu","Merkez","Tuzluca"],"Isparta":["Aksu","Atabey","Eğirdir","Gelendost","Gönen","Keçiborlu","Merkez","Senirkent","Sütçüler","Şarkikaraağaç","Uluborlu","Yalvaç","Yenişarbademli"],"İstanbul":["Adalar","Arnavutköy","Ataşehir","Avcılar","Bağcılar","Bahçelievler","Bakırköy","Başakşehir","Bayrampaşa","Beşiktaş","Beykoz","Beylikdüzü","Beyoğlu","Büyükçekmece","Çatalca","Çekmeköy","Esenler","Esenyurt","Eyüpsultan","Fatih","Gaziosmanpaşa","Güngören","Kadıköy","Kağıthane","Kartal","Küçükçekmece","Maltepe","Pendik","Sancaktepe","Sarıyer","Silivri","Sultanbeyli","Sultangazi","Şile","Şişli","Tuzla","Ümraniye","Üsküdar","Zeytinburnu"],"İzmir":["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Kemalpaşa","Kınık","Kiraz","Konak","Menderes","Menemen","Narlıdere","Ödemiş","Seferihisar","Selçuk","Tire","Torbalı","Urla"],"Kahramanmaraş":["Afşin","Andırın","Çağlayancerit","Dulkadiroğlu","Ekinözü","Elbistan","Göksun","Nurhak","Onikişubat","Pazarcık","Türkoğlu"],"Karabük":["Eflani","Eskipazar","Merkez","Ovacık","Safranbolu","Yenice"],"Karaman":["Ayrancı","Başyayla","Ermenek","Kazımkarabekir","Merkez","Sarıveliler"],"Kars":["Akyaka","Arpaçay","Digor","Kağızman","Merkez","Sarıkamış","Selim","Susuz"],"Kastamonu":["Abana","Ağlı","Araç","Azdavay","Bozkurt","Cide","Çatalzeytin","Daday","Devrekani","Doğanyurt","Hanönü","İhsangazi","İnebolu","Küre","Merkez","Pınarbaşı","Seydiler","Şenpazar","Taşköprü","Tosya"],"Kayseri":["Akkışla","Bünyan","Develi","Felahiye","Hacılar","İncesu","Kocasinan","Melikgazi","Özvatan","Pınarbaşı","Sarıoğlan","Sarız","Talas","Tomarza","Yahyalı","Yeşilhisar"],"Kırıkkale":["Bahşılı","Balışeyh","Çelebi","Delice","Karakeçili","Keskin","Merkez","Sulakyurt","Yahşihan"],"Kırklareli":["Babaeski","Demirköy","Kofçaz","Lüleburgaz","Merkez","Pehlivanköy","Pınarhisar","Vize"],"Kırşehir":["Akçakent","Akpınar","Boztepe","Çiçekdağı","Kaman","Merkez","Mucur"],"Kilis":["Elbeyli","Merkez","Musabeyli","Polateli"],"Kocaeli":["Başiskele","Çayırova","Darıca","Derince","Dilovası","Gebze","Gölcük","İzmit","Kandıra","Karamürsel","Kartepe","Körfez"],"Konya":["Ahırlı","Akören","Akşehir","Altınekin","Beyşehir","Bozkır","Cihanbeyli","Çeltik","Çumra","Derbent","Derebucak","Doğanhisar","Emirgazi","Ereğli","Güneysınır","Hadim","Halkapınar","Hüyük","Ilgın","Kadınhanı","Karapınar","Karatay","Kulu","Meram","Sarayönü","Selçuklu","Seydişehir","Taşkent","Tuzlukçu","Yalıhüyük","Yunak"],"Kütahya":["Altıntaş","Aslanapa","Çavdarhisar","Domaniç","Dumlupınar","Emet","Gediz","Hisarcık","Merkez","Pazarlar","Simav","Şaphane","Tavşanlı"],"Malatya":["Akçadağ","Arapgir","Arguvan","Battalgazi","Darende","Doğanşehir","Doğanyol","Hekimhan","Kale","Kuluncak","Pütürge","Yazıhan","Yeşilyurt"],"Manisa":["Ahmetli","Akhisar","Alaşehir","Demirci","Gölmarmara","Gördes","Kırkağaç","Köprübaşı","Kula","Salihli","Sarıgöl","Saruhanlı","Selendi","Soma","Şehzadeler","Turgutlu","Yunusemre"],"Mardin":["Artuklu","Dargeçit","Derik","Kızıltepe","Mazıdağı","Midyat","Nusaybin","Ömerli","Savur","Yeşilli"],"Mersin":["Akdeniz","Anamur","Aydıncık","Bozyazı","Çamlıyayla","Erdemli","Gülnar","Mezitli","Mut","Silifke","Tarsus","Toroslar","Yenişehir"],"Muğla":["Bodrum","Dalaman","Datça","Fethiye","Kavaklıdere","Köyceğiz","Marmaris","Menteşe","Milas","Ortaca","Seydikemer","Ula","Yatağan"],"Muş":["Bulanık","Hasköy","Korkut","Malazgirt","Merkez","Varto"],"Nevşehir":["Acıgöl","Avanos","Derinkuyu","Gülşehir","Hacıbektaş","Kozaklı","Merkez","Ürgüp"],"Niğde":["Altunhisar","Bor","Çamardı","Çiftlik","Merkez","Ulukışla"],"Ordu":["Akkuş","Altınordu","Aybastı","Çamaş","Çatalpınar","Çaybaşı","Fatsa","Gölköy","Gülyalı","Gürgentepe","İkizce","Kabadüz","Kabataş","Korgan","Kumru","Mesudiye","Perşembe","Ulubey","Ünye"],"Osmaniye":["Bahçe","Düziçi","Hasanbeyli","Kadirli","Merkez","Sumbas","Toprakkale"],"Rize":["Ardeşen","Çamlıhemşin","Çayeli","Derepazarı","Fındıklı","Güneysu","Hemşin","İkizdere","İyidere","Kalkandere","Merkez","Pazar"],"Sakarya":["Adapazarı","Akyazı","Arifiye","Erenler","Ferizli","Geyve","Hendek","Karapürçek","Karasu","Kaynarca","Kocaali","Pamukova","Sapanca","Serdivan","Söğütlü","Taraklı"],"Samsun":["19 Mayıs","Alaçam","Asarcık","Atakum","Ayvacık","Bafra","Canik","Çarşamba","Havza","İlkadım","Kavak","Ladik","Salıpazarı","Tekkeköy","Terme","Vezirköprü","Yakakent"],"Siirt":["Baykan","Eruh","Kurtalan","Merkez","Pervari","Şirvan","Tillo"],"Sinop":["Ayancık","Boyabat","Dikmen","Durağan","Erfelek","Gerze","Merkez","Saraydüzü","Türkeli"],"Sivas":["Akıncılar","Altınyayla","Divriği","Doğanşar","Gemerek","Gölova","Gürün","Hafik","İmranlı","Kangal","Koyulhisar","Merkez","Suşehri","Şarkışla","Ulaş","Yıldızeli","Zara"],"Şanlıurfa":["Akçakale","Birecik","Bozova","Ceylanpınar","Eyyübiye","Halfeti","Haliliye","Harran","Hilvan","Karaköprü","Siverek","Suruç","Viranşehir"],"Şırnak":["Beytüşşebap","Cizre","Güçlükonak","İdil","Merkez","Silopi","Uludere"],"Tekirdağ":["Çerkezköy","Çorlu","Ergene","Hayrabolu","Kapaklı","Malkara","Marmaraereğlisi","Muratlı","Saray","Süleymanpaşa","Şarköy"],"Tokat":["Almus","Artova","Başçiftlik","Erbaa","Merkez","Niksar","Pazar","Reşadiye","Sulusaray","Turhal","Yeşilyurt","Zile"],"Trabzon":["Akçaabat","Araklı","Arsin","Beşikdüzü","Çarşıbaşı","Çaykara","Dernekpazarı","Düzköy","Hayrat","Köprübaşı","Maçka","Of","Ortahisar","Sürmene","Şalpazarı","Tonya","Vakfıkebir","Yomra"],"Tunceli":["Çemişgezek","Hozat","Mazgirt","Merkez","Nazımiye","Ovacık","Pertek","Pülümür"],"Uşak":["Banaz","Eşme","Karahallı","Merkez","Sivaslı","Ulubey"],"Van":["Bahçesaray","Başkale","Çaldıran","Çatak","Edremit","Erciş","Gevaş","Gürpınar","İpekyolu","Muradiye","Özalp","Saray","Tuşba"],"Yalova":["Altınova","Armutlu","Çınarcık","Çiftlikköy","Merkez","Termal"],"Yozgat":["Akdağmadeni","Aydıncık","Boğazlıyan","Çandır","Çayıralan","Çekerek","Kadışehri","Merkez","Saraykent","Sarıkaya","Sorgun","Şefaatli","Yenifakılı","Yerköy"],"Zonguldak":["Alaplı","Çaycuma","Devrek","Ereğli","Gökçebey","Kilimli","Kozlu","Merkez"]};
 const categories = ['Tümü', ...ALL_CATEGORIES];
 const searchFilterChips = ['Tümü', 'Kişi', ...ALL_CATEGORIES];
 const SELLER_FOLLOWER_OVERRIDES = { 'Nova Sneaker': 12400, 'Atölye Deri': 3200, 'Mira Home': 1800, 'Studio Kumaş': 5400 };
@@ -1877,6 +1909,7 @@ function renderCart(){
       <div class="cart-item-meta">
         <div class="cart-item-name">${p.name}</div>
         <div class="cart-item-sub">${item.size} · ${t('qty')}: ${item.qty}</div>
+        ${p.shipOrigin ? `<div class="ship-origin-note" style="margin:2px 0 0;">📦 ${currentLang==='tr' ? `${p.shipOrigin.il}, ${p.shipOrigin.ilce}` : `${p.shipOrigin.il}, ${p.shipOrigin.ilce}`}</div>` : ''}
         <div class="cart-item-price">${fmt(effectivePrice * item.qty)}</div>
       </div>
       <div class="cart-remove" data-idx="${idx}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
@@ -2230,6 +2263,7 @@ const sheets = {
   recent: document.getElementById('recentSheet'),
   sellerRating: document.getElementById('sellerRatingSheet'),
   discount: document.getElementById('discountSheet'),
+  shipOrigin: document.getElementById('shipOriginSheet'),
 };
 let openSheetName = null;
 
@@ -2261,6 +2295,10 @@ document.querySelectorAll('.sheet-handle').forEach(handle => {
     startHeight = sheetEl.getBoundingClientRect().height;
     dragging = true;
     sheetEl.style.transition = 'none';
+    // The sheet has a resting min-height (so short/empty sheets don't look cramped),
+    // but that same min-height would stop it from ever measuring small enough to
+    // cross the close threshold below. Lift it only for the duration of the drag.
+    sheetEl.style.minHeight = '0px';
     handle.setPointerCapture(e.pointerId);
   });
 
@@ -2287,6 +2325,7 @@ document.querySelectorAll('.sheet-handle').forEach(handle => {
     sheetEl.style.transition = '';
     sheetEl.style.height = '';
     sheetEl.style.maxHeight = '';
+    sheetEl.style.minHeight = '';
 
     if(finalHeight < closeThreshold){
       sheetEl.classList.remove('expanded');
@@ -2311,6 +2350,11 @@ function openProductSheet(p){
   document.getElementById('sheetSeller').textContent = p.seller;
   document.getElementById('sheetPrice').innerHTML = p.discount ? `<span class="price-strike">${fmt(p.price)}</span> ${fmt(p.discount.price)}` : fmt(p.price);
   document.getElementById('qtyVal').textContent = qty;
+  const shipOriginEl = document.getElementById('sheetShipOrigin');
+  shipOriginEl.textContent = p.shipOrigin
+    ? `📦 ${currentLang==='tr' ? `${p.shipOrigin.il}, ${p.shipOrigin.ilce}'dan gönderilir` : `Ships from ${p.shipOrigin.il}, ${p.shipOrigin.ilce}`}`
+    : '';
+  shipOriginEl.style.display = p.shipOrigin ? 'block' : 'none';
 
   document.getElementById('sheetThumb').onclick = () => {
     closeAllSheets();
@@ -2699,7 +2743,81 @@ let nextListingId = 5000;
 let uploadStep = 1;
 let uploadData = { videoObjectUrl:null, thumbDataUrl:null, name:'', caption:'', price:'', stock:'', shipSize:null, category:null, sizes: [], photos: [] };
 
+function populateIlSelect(){
+  const ilSelect = document.getElementById('shipOriginIl');
+  const placeholder = ilSelect.firstElementChild;
+  ilSelect.innerHTML = '';
+  ilSelect.appendChild(placeholder);
+  Object.keys(IL_ILCE_DATA).forEach(il => {
+    const opt = document.createElement('option');
+    opt.value = il;
+    opt.textContent = il;
+    ilSelect.appendChild(opt);
+  });
+}
+function populateIlceSelect(il, selectedIlce){
+  const ilceSelect = document.getElementById('shipOriginIlce');
+  ilceSelect.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.id = 'shipOriginIlcePlaceholder';
+  if(il && IL_ILCE_DATA[il]){
+    ilceSelect.disabled = false;
+    placeholder.textContent = t('shipOriginIlcePlaceholder');
+    ilceSelect.appendChild(placeholder);
+    IL_ILCE_DATA[il].forEach(ilce => {
+      const opt = document.createElement('option');
+      opt.value = ilce;
+      opt.textContent = ilce;
+      if(ilce === selectedIlce) opt.selected = true;
+      ilceSelect.appendChild(opt);
+    });
+  } else {
+    ilceSelect.disabled = true;
+    placeholder.textContent = currentLang==='tr' ? 'Önce il seç' : 'Choose province first';
+    ilceSelect.appendChild(placeholder);
+  }
+}
+document.getElementById('shipOriginIl').addEventListener('change', (e) => {
+  populateIlceSelect(e.target.value, null);
+});
+function hasShipOrigin(){
+  return !!(currentUser.shipOrigin && currentUser.shipOrigin.il && currentUser.shipOrigin.ilce);
+}
+function updateShipOriginPill(){
+  const pillText = document.getElementById('uploadShipOriginText');
+  if(pillText) pillText.textContent = hasShipOrigin() ? `${currentUser.shipOrigin.il} / ${currentUser.shipOrigin.ilce}` : '—';
+}
+function openShipOriginSheet(onSaved){
+  populateIlSelect();
+  const il = currentUser.shipOrigin ? currentUser.shipOrigin.il : '';
+  const ilce = currentUser.shipOrigin ? currentUser.shipOrigin.ilce : '';
+  document.getElementById('shipOriginIl').value = il;
+  populateIlceSelect(il, ilce);
+  document.getElementById('shipOriginError').classList.remove('show');
+  pendingShipOriginCallback = onSaved || null;
+  openSheetByName('shipOrigin');
+}
+document.getElementById('shipOriginSaveBtn').addEventListener('click', () => {
+  const il = document.getElementById('shipOriginIl').value;
+  const ilce = document.getElementById('shipOriginIlce').value;
+  if(!il || !ilce){ document.getElementById('shipOriginError').classList.add('show'); return; }
+  currentUser.shipOrigin = { il, ilce };
+  updateShipOriginPill();
+  closeAllSheets();
+  const cb = pendingShipOriginCallback;
+  pendingShipOriginCallback = null;
+  if(cb) cb();
+});
+document.getElementById('uploadShipOriginEdit').addEventListener('click', () => openShipOriginSheet());
+document.addEventListener('click', (e) => {
+  if(openSheetName === 'shipOrigin' && !e.target.closest('#shipOriginSheet')){
+    closeAllSheets();
+  }
+}, true);
+let pendingShipOriginCallback = null;
 function openUploadScreen(){
+  if(!hasShipOrigin()){ openShipOriginSheet(openUploadScreen); return; }
   uploadStep = 1;
   uploadData = { videoObjectUrl:null, thumbDataUrl:null, name:'', caption:'', price:'', stock:'', shipSize:null, category:null, sizes: [], photos: [] };
   document.getElementById('uploadName').value = '';
@@ -2717,6 +2835,7 @@ function openUploadScreen(){
   renderShipSizeChips();
   renderUploadPhotoGrid();
   updateSizeSectionVisibility();
+  updateShipOriginPill();
   goToUploadStep(1);
   document.getElementById('uploadScreen').classList.remove('hidden');
 }
@@ -2976,6 +3095,7 @@ function submitListing(){
     sizes: uploadData.sizes,
     shipSize: uploadData.shipSize,
     shippingPayer: shippingPayerFor(Number(uploadData.price) || 0),
+    shipOrigin: currentUser.shipOrigin,
     thumb: uploadData.thumbDataUrl,
     videoUrl: uploadData.videoObjectUrl,
     photos: uploadData.photos.slice(),
@@ -3003,6 +3123,7 @@ function publishListingToFeed(listing){
     avatar: profileAvatarUrl || gradientAvatar(currentUser.initials, fallbackPair[0], fallbackPair[1]),
     likes: 0, views: 0, shares: 0, videoUrl: listing.videoUrl || null,
     stock: listing.stock, createdAt: Date.now(), photos: listing.photos && listing.photos.length ? listing.photos : [listing.thumb || gradientThumb(fallbackPair[0], fallbackPair[1], 135)],
+    shipOrigin: listing.shipOrigin,
   };
   listing.publishedProductId = productData.id;
   products.push(productData);
