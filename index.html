@@ -1284,6 +1284,7 @@ const STATIC_TEXT = {
   uploadStep4Title: ['Önizleme','Preview'], uploadStep4Sub: ['Akışta böyle görünecek — göndermeden önce kontrol et','This is how it will look in the feed — check it before submitting'],
   pendingNote: ['Gönderdikten sonra ürünün admin onayına düşecek, onaylanınca akışta yayınlanacak.','After submitting, your product goes to admin review — it will go live in the feed once approved.'],
   shipOriginTitle: ['Gönderim Adresi','Shipping Origin'],
+  listingsEmpty: ['Henüz ürün yüklemedin — akışın altındaki + butonuyla başla 🎬','You have not uploaded a product yet — start with the + button below the feed 🎬'],
   shipOriginSub: ['Ürünlerin nereden gönderileceğini alıcılar üstün körü görsün. İl/ilçe yeterli, açık adres gerekmiyor.','Let buyers get a rough idea where your products ship from. City/district is enough — no need for a full address.'],
   shipOriginIlLabel: ['İl','Province'], shipOriginIlceLabel: ['İlçe','District'],
   shipOriginIlPlaceholder: ['İl seç','Choose province'], shipOriginIlcePlaceholder: ['Önce il seç','Choose province first'],
@@ -1311,6 +1312,7 @@ function t(key, ...args){ const v = DYN[currentLang][key]; return typeof v === '
 
 function applyLanguage(lang){
   currentLang = lang;
+  document.documentElement.lang = lang;
   document.getElementById('langValue').textContent = lang === 'tr' ? 'Türkçe' : 'English';
   Object.entries(STATIC_TEXT).forEach(([id, [tr, en]]) => {
     const el = document.getElementById(id);
@@ -1323,7 +1325,8 @@ function applyLanguage(lang){
   document.querySelectorAll('.chip-cta').forEach(el => el.textContent = t('browse'));
   const hint = document.querySelector('.swipe-hint span');
   if(hint) hint.textContent = t('swipe');
-  if(catChipsEl && catChipsEl.firstChild) catChipsEl.firstChild.textContent = t('all');
+  if(catChipsEl) [...catChipsEl.children].forEach(el => { el.textContent = categoryLabel(el.dataset.cat); });
+  document.querySelectorAll('.rail-btn[data-role="share"] .rail-label').forEach(el => el.textContent = lang === 'tr' ? 'Paylaş' : 'Share');
   // Re-render any currently visible dynamic content so it picks up the new language
   if(currentTab === 'cart') renderCart();
   if(currentTab === 'search') renderGrid();
@@ -1331,6 +1334,7 @@ function applyLanguage(lang){
   if(openSheetName === 'following') renderFollowing();
   if(openSheetName === 'comment') renderComments();
   if(openSheetName === 'listings') renderListings();
+  if(!document.getElementById('uploadScreen').classList.contains('hidden')) renderUploadCategoryChips();
 }
 
 /* ============ AUTH SYSTEM ============ */
@@ -1583,7 +1587,7 @@ function buildFeedCard(p, isFirst){
       </div>
       <div class="rail-btn" data-role="share">
         <div class="rail-circle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg></div>
-        <div class="rail-label">Paylaş</div>
+        <div class="rail-label">${currentLang==='tr' ? 'Paylaş' : 'Share'}</div>
       </div>
     </div>
     <div class="card-info">
@@ -1757,7 +1761,22 @@ document.getElementById('searchShortcut').addEventListener('click', () => switch
 document.getElementById('cartBtnTop').addEventListener('click', () => switchTab('cart'));
 
 /* ---------- SEARCH TAB ---------- */
-const ALL_CATEGORIES = ['Giyim','Ayakkabı','Aksesuar','Elektronik','Ev & Yaşam','Kozmetik','Spor & Outdoor','Anne & Bebek','Kitap & Kırtasiye','Mutfak & Yemek','Pet Shop'];
+const ALL_CATEGORIES = ['Giyim','Ayakkabı','Aksesuar','Elektronik','Ev & Yaşam','Kozmetik','Spor & Outdoor','Anne & Bebek','Kitap & Kırtasiye','Mutfak & Yemek','Pet Shop','Diğer'];
+// Category values stay in Turkish under the hood (they're stored on products and compared
+// with ===), this map only controls what's displayed to the shopper in each language.
+const CATEGORY_LABELS = {
+  'Tümü': ['Tümü','All'], 'Kişi': ['Kişi','People'],
+  'Giyim': ['Giyim','Clothing'], 'Ayakkabı': ['Ayakkabı','Shoes'], 'Aksesuar': ['Aksesuar','Accessories'],
+  'Elektronik': ['Elektronik','Electronics'], 'Ev & Yaşam': ['Ev & Yaşam','Home & Living'],
+  'Kozmetik': ['Kozmetik','Cosmetics'], 'Spor & Outdoor': ['Spor & Outdoor','Sports & Outdoor'],
+  'Anne & Bebek': ['Anne & Bebek','Baby & Mom'], 'Kitap & Kırtasiye': ['Kitap & Kırtasiye','Books & Stationery'],
+  'Mutfak & Yemek': ['Mutfak & Yemek','Kitchen & Food'], 'Pet Shop': ['Pet Shop','Pet Shop'],
+  'Diğer': ['Diğer','Other'],
+};
+function categoryLabel(cat){
+  const pair = CATEGORY_LABELS[cat];
+  return pair ? (currentLang === 'tr' ? pair[0] : pair[1]) : cat;
+}
 // All 81 Turkish provinces mapped to their districts (both alphabetically sorted), used by the
 // seller shipping-origin picker so sellers choose from a real, complete list instead of free text.
 const IL_ILCE_DATA = {"Adana":["Aladağ","Ceyhan","Çukurova","Feke","İmamoğlu","Karaisalı","Karataş","Kozan","Pozantı","Saimbeyli","Sarıçam","Seyhan","Tufanbeyli","Yumurtalık","Yüreğir"],"Adıyaman":["Besni","Çelikhan","Gerger","Gölbaşı","Kahta","Merkez","Samsat","Sincik","Tut"],"Afyonkarahisar":["Başmakçı","Bayat","Bolvadin","Çay","Çobanlar","Dazkırı","Dinar","Emirdağ","Evciler","Hocalar","İhsaniye","İscehisar","Kızılören","Merkez","Sandıklı","Sinanpaşa","Sultandağı","Şuhut"],"Ağrı":["Diyadin","Doğubayazıt","Eleşkirt","Hamur","Merkez","Patnos","Taşlıçay","Tutak"],"Aksaray":["Ağaçören","Eskil","Gülağaç","Güzelyurt","Merkez","Ortaköy","Sarıyahşi","Sultanhanı"],"Amasya":["Göynücek","Gümüşhacıköy","Hamamözü","Merkez","Merzifon","Suluova","Taşova"],"Ankara":["Akyurt","Altındağ","Ayaş","Bala","Beypazarı","Çamlıdere","Çankaya","Çubuk","Elmadağ","Etimesgut","Evren","Gölbaşı","Güdül","Haymana","Kahramankazan","Kalecik","Keçiören","Kızılcahamam","Mamak","Nallıhan","Polatlı","Pursaklar","Sincan","Şereflikoçhisar","Yenimahalle"],"Antalya":["Akseki","Aksu","Alanya","Demre","Döşemealtı","Elmalı","Finike","Gazipaşa","Gündoğmuş","İbradı","Kaş","Kemer","Kepez","Konyaaltı","Korkuteli","Kumluca","Manavgat","Muratpaşa","Serik"],"Ardahan":["Çıldır","Damal","Göle","Hanak","Merkez","Posof"],"Artvin":["Ardanuç","Arhavi","Borçka","Hopa","Kemalpaşa","Merkez","Murgul","Şavşat","Yusufeli"],"Aydın":["Bozdoğan","Buharkent","Çine","Didim","Efeler","Germencik","İncirliova","Karacasu","Karpuzlu","Koçarlı","Köşk","Kuşadası","Kuyucak","Nazilli","Söke","Sultanhisar","Yenipazar"],"Balıkesir":["Altıeylül","Ayvalık","Balya","Bandırma","Bigadiç","Burhaniye","Dursunbey","Edremit","Erdek","Gömeç","Gönen","Havran","İvrindi","Karesi","Kepsut","Manyas","Marmara","Savaştepe","Sındırgı","Susurluk"],"Bartın":["Amasra","Kurucaşile","Merkez","Ulus"],"Batman":["Beşiri","Gercüş","Hasankeyf","Kozluk","Merkez","Sason"],"Bayburt":["Aydıntepe","Demirözü","Merkez"],"Bilecik":["Bozüyük","Gölpazarı","İnhisar","Merkez","Osmaneli","Pazaryeri","Söğüt","Yenipazar"],"Bingöl":["Adaklı","Genç","Karlıova","Kiğı","Merkez","Solhan","Yayladere","Yedisu"],"Bitlis":["Adilcevaz","Ahlat","Güroymak","Hizan","Merkez","Mutki","Tatvan"],"Bolu":["Dörtdivan","Gerede","Göynük","Kıbrıscık","Mengen","Merkez","Mudurnu","Seben","Yeniçağa"],"Burdur":["Ağlasun","Altınyayla","Bucak","Çavdır","Çeltikçi","Gölhisar","Karamanlı","Kemer","Merkez","Tefenni","Yeşilova"],"Bursa":["Büyükorhan","Gemlik","Gürsu","Harmancık","İnegöl","İznik","Karacabey","Keles","Kestel","Mudanya","Mustafakemalpaşa","Nilüfer","Orhaneli","Orhangazi","Osmangazi","Yenişehir","Yıldırım"],"Çanakkale":["Ayvacık","Bayramiç","Biga","Bozcaada","Çan","Eceabat","Ezine","Gelibolu","Gökçeada","Lapseki","Merkez","Yenice"],"Çankırı":["Atkaracalar","Bayramören","Çerkeş","Eldivan","Ilgaz","Kızılırmak","Korgun","Kurşunlu","Merkez","Orta","Şabanözü","Yapraklı"],"Çorum":["Alaca","Bayat","Boğazkale","Dodurga","İskilip","Kargı","Laçin","Mecitözü","Merkez","Oğuzlar","Ortaköy","Osmancık","Sungurlu","Uğurludağ"],"Denizli":["Acıpayam","Babadağ","Baklan","Bekilli","Beyağaç","Bozkurt","Buldan","Çal","Çameli","Çardak","Çivril","Güney","Honaz","Kale","Merkezefendi","Pamukkale","Sarayköy","Serinhisar","Tavas"],"Diyarbakır":["Bağlar","Bismil","Çermik","Çınar","Çüngüş","Dicle","Eğil","Ergani","Hani","Hazro","Kayapınar","Kocaköy","Kulp","Lice","Silvan","Sur","Yenişehir"],"Düzce":["Akçakoca","Cumayeri","Çilimli","Gölyaka","Gümüşova","Kaynaşlı","Merkez","Yığılca"],"Edirne":["Enez","Havsa","İpsala","Keşan","Lalapaşa","Meriç","Merkez","Süloğlu","Uzunköprü"],"Elazığ":["Ağın","Alacakaya","Arıcak","Baskil","Karakoçan","Keban","Kovancılar","Maden","Merkez","Palu","Sivrice"],"Erzincan":["Çayırlı","İliç","Kemah","Kemaliye","Merkez","Otlukbeli","Refahiye","Tercan","Üzümlü"],"Erzurum":["Aşkale","Aziziye","Çat","Hınıs","Horasan","İspir","Karaçoban","Karayazı","Köprüköy","Narman","Oltu","Olur","Palandöken","Pasinler","Pazaryolu","Şenkaya","Tekman","Tortum","Uzundere","Yakutiye"],"Eskişehir":["Alpu","Beylikova","Çifteler","Günyüzü","Han","İnönü","Mahmudiye","Mihalgazi","Mihalıççık","Odunpazarı","Sarıcakaya","Seyitgazi","Sivrihisar","Tepebaşı"],"Gaziantep":["Araban","İslahiye","Karkamış","Nizip","Nurdağı","Oğuzeli","Şahinbey","Şehitkamil","Yavuzeli"],"Giresun":["Alucra","Bulancak","Çamoluk","Çanakçı","Dereli","Doğankent","Espiye","Eynesil","Görele","Güce","Keşap","Merkez","Piraziz","Şebinkarahisar","Tirebolu","Yağlıdere"],"Gümüşhane":["Kelkit","Köse","Kürtün","Merkez","Şiran","Torul"],"Hakkari":["Çukurca","Derecik","Merkez","Şemdinli","Yüksekova"],"Hatay":["Altınözü","Antakya","Arsuz","Belen","Defne","Dörtyol","Erzin","Hassa","İskenderun","Kırıkhan","Kumlu","Payas","Reyhanlı","Samandağ","Yayladağı"],"Iğdır":["Aralık","Karakoyunlu","Merkez","Tuzluca"],"Isparta":["Aksu","Atabey","Eğirdir","Gelendost","Gönen","Keçiborlu","Merkez","Senirkent","Sütçüler","Şarkikaraağaç","Uluborlu","Yalvaç","Yenişarbademli"],"İstanbul":["Adalar","Arnavutköy","Ataşehir","Avcılar","Bağcılar","Bahçelievler","Bakırköy","Başakşehir","Bayrampaşa","Beşiktaş","Beykoz","Beylikdüzü","Beyoğlu","Büyükçekmece","Çatalca","Çekmeköy","Esenler","Esenyurt","Eyüpsultan","Fatih","Gaziosmanpaşa","Güngören","Kadıköy","Kağıthane","Kartal","Küçükçekmece","Maltepe","Pendik","Sancaktepe","Sarıyer","Silivri","Sultanbeyli","Sultangazi","Şile","Şişli","Tuzla","Ümraniye","Üsküdar","Zeytinburnu"],"İzmir":["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Kemalpaşa","Kınık","Kiraz","Konak","Menderes","Menemen","Narlıdere","Ödemiş","Seferihisar","Selçuk","Tire","Torbalı","Urla"],"Kahramanmaraş":["Afşin","Andırın","Çağlayancerit","Dulkadiroğlu","Ekinözü","Elbistan","Göksun","Nurhak","Onikişubat","Pazarcık","Türkoğlu"],"Karabük":["Eflani","Eskipazar","Merkez","Ovacık","Safranbolu","Yenice"],"Karaman":["Ayrancı","Başyayla","Ermenek","Kazımkarabekir","Merkez","Sarıveliler"],"Kars":["Akyaka","Arpaçay","Digor","Kağızman","Merkez","Sarıkamış","Selim","Susuz"],"Kastamonu":["Abana","Ağlı","Araç","Azdavay","Bozkurt","Cide","Çatalzeytin","Daday","Devrekani","Doğanyurt","Hanönü","İhsangazi","İnebolu","Küre","Merkez","Pınarbaşı","Seydiler","Şenpazar","Taşköprü","Tosya"],"Kayseri":["Akkışla","Bünyan","Develi","Felahiye","Hacılar","İncesu","Kocasinan","Melikgazi","Özvatan","Pınarbaşı","Sarıoğlan","Sarız","Talas","Tomarza","Yahyalı","Yeşilhisar"],"Kırıkkale":["Bahşılı","Balışeyh","Çelebi","Delice","Karakeçili","Keskin","Merkez","Sulakyurt","Yahşihan"],"Kırklareli":["Babaeski","Demirköy","Kofçaz","Lüleburgaz","Merkez","Pehlivanköy","Pınarhisar","Vize"],"Kırşehir":["Akçakent","Akpınar","Boztepe","Çiçekdağı","Kaman","Merkez","Mucur"],"Kilis":["Elbeyli","Merkez","Musabeyli","Polateli"],"Kocaeli":["Başiskele","Çayırova","Darıca","Derince","Dilovası","Gebze","Gölcük","İzmit","Kandıra","Karamürsel","Kartepe","Körfez"],"Konya":["Ahırlı","Akören","Akşehir","Altınekin","Beyşehir","Bozkır","Cihanbeyli","Çeltik","Çumra","Derbent","Derebucak","Doğanhisar","Emirgazi","Ereğli","Güneysınır","Hadim","Halkapınar","Hüyük","Ilgın","Kadınhanı","Karapınar","Karatay","Kulu","Meram","Sarayönü","Selçuklu","Seydişehir","Taşkent","Tuzlukçu","Yalıhüyük","Yunak"],"Kütahya":["Altıntaş","Aslanapa","Çavdarhisar","Domaniç","Dumlupınar","Emet","Gediz","Hisarcık","Merkez","Pazarlar","Simav","Şaphane","Tavşanlı"],"Malatya":["Akçadağ","Arapgir","Arguvan","Battalgazi","Darende","Doğanşehir","Doğanyol","Hekimhan","Kale","Kuluncak","Pütürge","Yazıhan","Yeşilyurt"],"Manisa":["Ahmetli","Akhisar","Alaşehir","Demirci","Gölmarmara","Gördes","Kırkağaç","Köprübaşı","Kula","Salihli","Sarıgöl","Saruhanlı","Selendi","Soma","Şehzadeler","Turgutlu","Yunusemre"],"Mardin":["Artuklu","Dargeçit","Derik","Kızıltepe","Mazıdağı","Midyat","Nusaybin","Ömerli","Savur","Yeşilli"],"Mersin":["Akdeniz","Anamur","Aydıncık","Bozyazı","Çamlıyayla","Erdemli","Gülnar","Mezitli","Mut","Silifke","Tarsus","Toroslar","Yenişehir"],"Muğla":["Bodrum","Dalaman","Datça","Fethiye","Kavaklıdere","Köyceğiz","Marmaris","Menteşe","Milas","Ortaca","Seydikemer","Ula","Yatağan"],"Muş":["Bulanık","Hasköy","Korkut","Malazgirt","Merkez","Varto"],"Nevşehir":["Acıgöl","Avanos","Derinkuyu","Gülşehir","Hacıbektaş","Kozaklı","Merkez","Ürgüp"],"Niğde":["Altunhisar","Bor","Çamardı","Çiftlik","Merkez","Ulukışla"],"Ordu":["Akkuş","Altınordu","Aybastı","Çamaş","Çatalpınar","Çaybaşı","Fatsa","Gölköy","Gülyalı","Gürgentepe","İkizce","Kabadüz","Kabataş","Korgan","Kumru","Mesudiye","Perşembe","Ulubey","Ünye"],"Osmaniye":["Bahçe","Düziçi","Hasanbeyli","Kadirli","Merkez","Sumbas","Toprakkale"],"Rize":["Ardeşen","Çamlıhemşin","Çayeli","Derepazarı","Fındıklı","Güneysu","Hemşin","İkizdere","İyidere","Kalkandere","Merkez","Pazar"],"Sakarya":["Adapazarı","Akyazı","Arifiye","Erenler","Ferizli","Geyve","Hendek","Karapürçek","Karasu","Kaynarca","Kocaali","Pamukova","Sapanca","Serdivan","Söğütlü","Taraklı"],"Samsun":["19 Mayıs","Alaçam","Asarcık","Atakum","Ayvacık","Bafra","Canik","Çarşamba","Havza","İlkadım","Kavak","Ladik","Salıpazarı","Tekkeköy","Terme","Vezirköprü","Yakakent"],"Siirt":["Baykan","Eruh","Kurtalan","Merkez","Pervari","Şirvan","Tillo"],"Sinop":["Ayancık","Boyabat","Dikmen","Durağan","Erfelek","Gerze","Merkez","Saraydüzü","Türkeli"],"Sivas":["Akıncılar","Altınyayla","Divriği","Doğanşar","Gemerek","Gölova","Gürün","Hafik","İmranlı","Kangal","Koyulhisar","Merkez","Suşehri","Şarkışla","Ulaş","Yıldızeli","Zara"],"Şanlıurfa":["Akçakale","Birecik","Bozova","Ceylanpınar","Eyyübiye","Halfeti","Haliliye","Harran","Hilvan","Karaköprü","Siverek","Suruç","Viranşehir"],"Şırnak":["Beytüşşebap","Cizre","Güçlükonak","İdil","Merkez","Silopi","Uludere"],"Tekirdağ":["Çerkezköy","Çorlu","Ergene","Hayrabolu","Kapaklı","Malkara","Marmaraereğlisi","Muratlı","Saray","Süleymanpaşa","Şarköy"],"Tokat":["Almus","Artova","Başçiftlik","Erbaa","Merkez","Niksar","Pazar","Reşadiye","Sulusaray","Turhal","Yeşilyurt","Zile"],"Trabzon":["Akçaabat","Araklı","Arsin","Beşikdüzü","Çarşıbaşı","Çaykara","Dernekpazarı","Düzköy","Hayrat","Köprübaşı","Maçka","Of","Ortahisar","Sürmene","Şalpazarı","Tonya","Vakfıkebir","Yomra"],"Tunceli":["Çemişgezek","Hozat","Mazgirt","Merkez","Nazımiye","Ovacık","Pertek","Pülümür"],"Uşak":["Banaz","Eşme","Karahallı","Merkez","Sivaslı","Ulubey"],"Van":["Bahçesaray","Başkale","Çaldıran","Çatak","Edremit","Erciş","Gevaş","Gürpınar","İpekyolu","Muradiye","Özalp","Saray","Tuşba"],"Yalova":["Altınova","Armutlu","Çınarcık","Çiftlikköy","Merkez","Termal"],"Yozgat":["Akdağmadeni","Aydıncık","Boğazlıyan","Çandır","Çayıralan","Çekerek","Kadışehri","Merkez","Saraykent","Sarıkaya","Sorgun","Şefaatli","Yenifakılı","Yerköy"],"Zonguldak":["Alaplı","Çaycuma","Devrek","Ereğli","Gökçebey","Kilimli","Kozlu","Merkez"]};
@@ -1775,7 +1794,8 @@ const catChipsEl = document.getElementById('catChips');
 searchFilterChips.forEach(c => {
   const el = document.createElement('div');
   el.className = 'cat-chip' + (c === selectedCat ? ' selected' : '');
-  el.textContent = c;
+  el.textContent = categoryLabel(c);
+  el.dataset.cat = c;
   el.addEventListener('click', () => {
     selectedCat = c;
     [...catChipsEl.children].forEach(ch => ch.classList.remove('selected'));
@@ -2554,19 +2574,44 @@ function recordShare(){
   activeShareProduct.shares = (activeShareProduct.shares || 0) + 1;
   if(openSheetName === 'listings') renderListings();
 }
-document.getElementById('shareCopy').addEventListener('click', () => {
-  const link = `kaydirkaydir.com/urun/${activeShareProduct.id}`;
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(link).catch(() => {});
+function copyToClipboard(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(text).catch(() => copyToClipboardFallback(text));
   }
+  return copyToClipboardFallback(text);
+}
+function copyToClipboardFallback(text){
+  // navigator.clipboard requires a secure context and isn't available when this file is
+  // opened directly (file://) in some browsers, so fall back to the older selection-based copy.
+  return new Promise((resolve) => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try{ document.execCommand('copy'); }catch(err){ /* nothing more we can do here */ }
+    document.body.removeChild(ta);
+    resolve();
+  });
+}
+document.getElementById('shareCopy').addEventListener('click', () => {
+  const link = `https://kaydirkaydir.com/urun/${activeShareProduct.id}`;
+  copyToClipboard(link);
   recordShare();
   closeAllSheets();
   showToast(currentLang==='tr' ? 'Bağlantı kopyalandı 🔗' : 'Link copied 🔗');
 });
 document.getElementById('shareWhatsapp').addEventListener('click', () => {
+  const link = `https://kaydirkaydir.com/urun/${activeShareProduct.id}`;
+  const text = currentLang==='tr'
+    ? `${activeShareProduct.name} ürününe göz at: ${link}`
+    : `Check out ${activeShareProduct.name}: ${link}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   recordShare();
   closeAllSheets();
-  showToast(currentLang==='tr' ? "WhatsApp'ta paylaşım açılıyor..." : 'Opening share on WhatsApp...');
 });
 document.getElementById('shareAsMessage').addEventListener('click', () => {
   const product = activeShareProduct;
@@ -2592,7 +2637,7 @@ function openRecipientPicker(product){
   openSheetByName('recipient');
 }
 document.getElementById('shareMore').addEventListener('click', () => {
-  const link = `kaydirkaydir.com/urun/${activeShareProduct.id}`;
+  const link = `https://kaydirkaydir.com/urun/${activeShareProduct.id}`;
   recordShare();
   closeAllSheets();
   if(navigator.share){
@@ -2921,7 +2966,7 @@ function renderUploadCategoryChips(){
   ALL_CATEGORIES.forEach(cat => {
     const el = document.createElement('div');
     el.className = 'upload-cat-chip' + (uploadData.category === cat ? ' selected' : '');
-    el.textContent = cat;
+    el.textContent = categoryLabel(cat);
     el.addEventListener('click', () => {
       uploadData.category = cat;
       uploadData.sizes = [];
