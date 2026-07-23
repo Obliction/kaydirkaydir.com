@@ -1568,7 +1568,7 @@ function buildFeedCard(p, isFirst){
   card.dataset.productId = p.id;
   const hasRealVideo = !!p.videoUrl;
   const mediaHtml = hasRealVideo
-    ? `<video class="card-media-video" src="${p.videoUrl}" autoplay muted loop playsinline></video><div class="card-media-gradient"></div>`
+    ? `<video class="card-media-video" src="${p.videoUrl}" loop playsinline></video><div class="card-media-gradient"></div>`
     : `<div class="card-media" style="background-image:url('${p.img}')"></div><div class="shimmer"></div>`;
   card.innerHTML = `
     ${mediaHtml}
@@ -1605,15 +1605,52 @@ function buildFeedCard(p, isFirst){
   `;
   feed.appendChild(card);
 
-  card.querySelector('.play-toggle').addEventListener('click', () => {
-    card.classList.toggle('paused');
-    if(hasRealVideo){
-      const vid = card.querySelector('.card-media-video');
-      if(card.classList.contains('paused')) vid.pause(); else vid.play().catch(() => {});
-    } else {
-      card.querySelector('.shimmer').style.animationPlayState = card.classList.contains('paused') ? 'paused' : 'running';
+  if(hasRealVideo){
+    const vidEl = card.querySelector('.card-media-video');
+    vidEl.muted = false;
+    vidEl.play().catch(() => {
+      // Some browsers block autoplay with sound until there's been a user gesture on the
+      // page; fall back to muted playback rather than leaving the video frozen.
+      vidEl.muted = true;
+      vidEl.play().catch(() => {});
+    });
+  }
+
+  {
+    const toggleEl = card.querySelector('.play-toggle');
+    const vidEl = hasRealVideo ? card.querySelector('.card-media-video') : null;
+    let holdTimer = null;
+    let isHolding = false;
+    let holdSuppressClick = false;
+    toggleEl.addEventListener('pointerdown', () => {
+      holdSuppressClick = false;
+      holdTimer = setTimeout(() => {
+        if(card.classList.contains('paused')) return; // don't fast-forward a frozen frame
+        isHolding = true;
+        holdSuppressClick = true;
+        if(vidEl) vidEl.playbackRate = 2;
+      }, 220);
+    });
+    function endHold(){
+      clearTimeout(holdTimer);
+      if(isHolding){
+        isHolding = false;
+        if(vidEl) vidEl.playbackRate = 1;
+      }
     }
-  });
+    toggleEl.addEventListener('pointerup', endHold);
+    toggleEl.addEventListener('pointerleave', endHold);
+    toggleEl.addEventListener('pointercancel', endHold);
+    toggleEl.addEventListener('click', () => {
+      if(holdSuppressClick){ holdSuppressClick = false; return; }
+      card.classList.toggle('paused');
+      if(hasRealVideo){
+        if(card.classList.contains('paused')) vidEl.pause(); else vidEl.play().catch(() => {});
+      } else {
+        card.querySelector('.shimmer').style.animationPlayState = card.classList.contains('paused') ? 'paused' : 'running';
+      }
+    });
+  }
 
   const likeBtn = card.querySelector('[data-role="like"]');
   if(favorites.has(p.id)) likeBtn.classList.add('liked');
