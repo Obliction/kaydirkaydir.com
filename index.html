@@ -130,6 +130,7 @@
   .product-meta{ flex:1; min-width:0; }
   .product-name{ font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#F5F1FF; }
   .product-price{ font-size:14px; font-weight:700; color:var(--gold); margin-top:2px; }
+  .discount-badge{ font-size:10.5px; font-weight:700; color:#ff8a4d; margin-top:2px; }
   .chip-cta{ font-family:'Space Grotesk', sans-serif; font-size:12px; font-weight:700; background:var(--accent); color:#fff; padding:9px 14px; border-radius:20px; white-space:nowrap; }
 
   .swipe-hint{ position:absolute; left:50%; bottom:200px; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:6px; z-index:15; pointer-events:none; animation:hintbob 1.6s ease-in-out infinite; }
@@ -412,6 +413,8 @@
   .shipping-note{ font-size:12px; color:var(--gold); background:var(--accent-dim); border-radius:14px; padding:12px 15px; line-height:1.5; margin-bottom:12px; font-weight:600; }
   .earnings-note{ font-size:11.5px; color:var(--success); background:rgba(74,222,128,0.1); border-radius:14px; padding:12px 15px; line-height:1.6; margin-bottom:12px; font-weight:600; }
   .ship-origin-note{ font-size:12.5px; color:var(--text-dim); margin:6px 0 14px; font-weight:500; }
+  .low-stock-note{ font-size:12.5px; color:#fff; background:linear-gradient(135deg, #ff4d6d, #ff8a4d); border-radius:12px; padding:9px 13px; margin-bottom:14px; font-weight:700; }
+  .own-product-note{ font-size:12.5px; color:var(--text-dim); background:var(--panel); border-radius:12px; padding:11px 13px; margin-bottom:14px; font-weight:600; text-align:center; }
   .ship-origin-pill{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-dim); background:var(--panel); border-radius:20px; padding:8px 13px; margin-bottom:14px; cursor:pointer; font-weight:600; }
   #shipOriginSheet{ z-index:210; }
 
@@ -887,6 +890,8 @@
           </div>
         </div>
         <div class="ship-origin-note" id="sheetShipOrigin"></div>
+        <div class="low-stock-note" id="sheetLowStockNote" style="display:none;"></div>
+        <div class="own-product-note" id="sheetOwnProductNote" style="display:none;"></div>
         <div class="field-label" id="txtSizeLabel">Beden</div>
         <div class="option-row" id="sizeRow"></div>
         <div class="field-label" id="txtQtyLabel">Adet</div>
@@ -1043,6 +1048,8 @@
         <div class="upload-preview-card" id="discountPreview"></div>
         <label class="auth-field-label" id="txtDiscountLabel">İndirimli Fiyat (₺)</label>
         <input type="number" class="auth-input" id="discountInput" placeholder="999" min="50">
+        <label class="auth-field-label" id="txtDiscountUnitsLabel">Kaç ürün için geçerli olsun?</label>
+        <input type="number" class="auth-input" id="discountUnitsInput" placeholder="10" min="1">
         <div class="earnings-note" id="discountEarningsNote" style="display:none;"></div>
         <div class="sheet-actions">
           <div class="btn-secondary" id="cancelDiscountBtn">Vazgeç</div>
@@ -1291,6 +1298,7 @@ const STATIC_TEXT = {
   txtRatingTitle: ['Satıcıyı Değerlendir','Rate Seller'], txtRatingReviewLabel: ['Yorumun (opsiyonel)','Your review (optional)'],
   cancelRatingBtn: ['Vazgeç','Cancel'], submitRatingBtn: ['Gönder','Submit'],
   txtDiscountTitle: ['İndirim Uygula','Apply Discount'], txtDiscountLabel: ['İndirimli Fiyat (₺)','Discounted Price (₺)'],
+  txtDiscountUnitsLabel: ['Kaç ürün için geçerli olsun?','How many units should this apply to?'],
   cancelDiscountBtn: ['Vazgeç','Cancel'], saveDiscountBtn: ['Uygula','Apply'], removeDiscountBtn: ['İndirimi Kaldır','Remove Discount'],
   txtSellerReviewsLabel: ['Değerlendirmeler','Reviews'],
   uploadStep1Title: ['Tanıtım Videosu','Promo Video'], uploadStep1Sub: ['Ürününü en iyi anlatan kısa bir video seç','Choose a short video that shows your product best'],
@@ -1575,6 +1583,23 @@ function unlockVideoSoundOnInteraction(){
 document.addEventListener('pointerdown', unlockVideoSoundOnInteraction, { capture:true });
 document.addEventListener('click', unlockVideoSoundOnInteraction, { capture:false });
 const viewedProductIds = new Set();
+// Lightweight personalization: a running per-category score built from what the shopper
+// actually engages with (favorites, watch time, comments, views). The main feed uses this
+// to lean toward categories they engage with more, without making the feed feel rigid or
+// showing the exact same order every time.
+let categoryAffinity = {};
+function bumpAffinity(category, amount){
+  if(!category) return;
+  categoryAffinity[category] = (categoryAffinity[category] || 0) + amount;
+}
+function personalizedOrder(list){
+  // Weighted-random ordering: higher affinity categories tend to surface earlier, but the
+  // randomness keeps it from feeling repetitive or fully predictable.
+  return list
+    .map(p => ({ p, score: (categoryAffinity[p.category] || 0) + Math.random() * 6 }))
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.p);
+}
 let guestFeedViewCount = 0;
 let guestAuthPromptShown = false;
 const feedViewObserver = new IntersectionObserver((entries) => {
@@ -1589,6 +1614,7 @@ const feedViewObserver = new IntersectionObserver((entries) => {
         const product = findProduct(pid);
         if(product){
           product.views = (product.views || 0) + 1;
+          bumpAffinity(product.category, 1);
           if(openSheetName === 'listings') renderListings();
         }
         if(!authState.loggedIn && !guestAuthPromptShown){
@@ -1674,6 +1700,7 @@ function buildFeedCard(p, isFirst){
         <div class="product-meta">
           <div class="product-name">${p.name}</div>
           <div class="product-price">${p.discount ? `<span class="price-strike">${fmt(p.price)}</span> ${fmt(p.discount.price)}` : fmt(p.price)}</div>
+          ${p.discount && p.discount.unitsRemaining ? `<div class="discount-badge">${currentLang==='tr' ? `🔥 Son ${p.discount.unitsRemaining} üründe geçerli` : `🔥 Valid on the last ${p.discount.unitsRemaining}`}</div>` : ''}
         </div>
         <div class="chip-cta">${t('browse')}</div>
       </div>
@@ -1752,8 +1779,20 @@ function buildFeedCard(p, isFirst){
       fillEl.style.width = pct + '%';
       handleEl.style.left = pct + '%';
     }
+    let lastWatchTickAt = null;
+    let watchSecondsSinceAffinityBump = 0;
     vidEl.addEventListener('timeupdate', () => {
       if(!scrubbing && vidEl.duration) setProgressUI(vidEl.currentTime / vidEl.duration);
+      const now = Date.now();
+      if(lastWatchTickAt !== null){
+        // Cap the delta so a background tab / loop-wrap can't inflate this.
+        watchSecondsSinceAffinityBump += Math.min((now - lastWatchTickAt) / 1000, 1);
+        if(watchSecondsSinceAffinityBump >= 5){
+          bumpAffinity(p.category, 1);
+          watchSecondsSinceAffinityBump = 0;
+        }
+      }
+      lastWatchTickAt = now;
     });
     function ratioFromEvent(e){
       const rect = trackEl.getBoundingClientRect();
@@ -1840,7 +1879,7 @@ function renderFeedList(list, scrollToProductId){
 }
 function renderFeed(filterFn, scrollToProductId){
   feedFilterFn = filterFn || null;
-  const list = feedFilterFn ? products.filter(feedFilterFn) : products;
+  const list = feedFilterFn ? products.filter(feedFilterFn) : personalizedOrder(products);
   renderFeedList(list, scrollToProductId);
 }
 function openCategoryFeed(p){
@@ -1872,7 +1911,7 @@ function refreshFeed(){
   if(now - lastRefreshTime < 1200) return;
   lastRefreshTime = now;
   feedFilterFn = null;
-  renderFeedList(shuffledCopy(products));
+  renderFeedList(personalizedOrder(products));
   showToast(currentLang === 'tr' ? 'Akış yenilendi' : 'Feed refreshed');
 }
 
@@ -1939,7 +1978,12 @@ feed.addEventListener('wheel', (e) => {
 });
 
 function toggleFavorite(id){
-  if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  if(favorites.has(id)) favorites.delete(id);
+  else {
+    favorites.add(id);
+    const p = findProduct(id);
+    if(p) bumpAffinity(p.category, 4);
+  }
   document.getElementById('statFavs').textContent = favorites.size;
 }
 
@@ -2109,7 +2153,9 @@ function renderGrid(){
       <div class="grid-thumb" style="background-image:url('${p.img}')"></div>
       <div class="grid-info">
         <div class="grid-name">${p.name}</div>
-        <div class="grid-price">${fmt(p.price)}</div>
+        <div class="grid-price">${p.discount ? `<span class="price-strike">${fmt(p.price)}</span> ${fmt(p.discount.price)}` : fmt(p.price)}</div>
+        ${p.discount && p.discount.unitsRemaining ? `<div class="discount-badge">${currentLang==='tr' ? `🔥 Son ${p.discount.unitsRemaining} üründe` : `🔥 Last ${p.discount.unitsRemaining} left`}</div>` : ''}
+        ${!p.isMine && p.stock > 0 && p.stock <= 10 ? `<div class="discount-badge" style="color:var(--accent);">${currentLang==='tr' ? `⚡ ${p.stock} tane kaldı` : `⚡ ${p.stock} left`}</div>` : ''}
       </div>`;
     el.addEventListener('click', () => openListFeed(filtered, p.id));
     grid.appendChild(el);
@@ -2200,10 +2246,23 @@ document.getElementById('checkoutBtn').addEventListener('click', () => {
     cart.forEach(item => {
       const product = findProduct(item.productId);
       if(product && typeof product.stock === 'number'){
-        const effectivePrice = (product.discount && product.discount.price) ? product.discount.price : product.price;
-        product.stock = Math.max(0, product.stock - item.qty);
-        product.sold = (product.sold || 0) + item.qty;
-        orderTotal += effectivePrice * item.qty;
+        // Defensive cap: never let a cart entry buy more than the stock actually available
+        // right now (stock may have changed since this was added to the cart).
+        const qtyToBuy = Math.min(item.qty, product.stock);
+        if(qtyToBuy <= 0) return;
+        let itemTotal;
+        if(product.discount && product.discount.price){
+          const discountedUnits = Math.min(qtyToBuy, product.discount.unitsRemaining ?? product.discount.unitsLimit ?? 0);
+          const fullPriceUnits = qtyToBuy - discountedUnits;
+          itemTotal = discountedUnits * product.discount.price + fullPriceUnits * product.price;
+          product.discount.unitsRemaining = Math.max(0, (product.discount.unitsRemaining ?? product.discount.unitsLimit ?? 0) - discountedUnits);
+          if(product.discount.unitsRemaining <= 0) product.discount = null;
+        } else {
+          itemTotal = qtyToBuy * product.price;
+        }
+        product.stock = Math.max(0, product.stock - qtyToBuy);
+        product.sold = (product.sold || 0) + qtyToBuy;
+        orderTotal += itemTotal;
         orderItems.push(item.productId);
         if(product.stock === 0) triggerStockDepleted(product.id);
       }
@@ -2617,6 +2676,24 @@ function openProductSheet(p){
     : '';
   shipOriginEl.style.display = p.shipOrigin ? 'block' : 'none';
 
+  const lowStockEl = document.getElementById('sheetLowStockNote');
+  if(!p.isMine && p.stock > 0 && p.stock <= 10){
+    lowStockEl.textContent = currentLang==='tr' ? `⚡ Sadece ${p.stock} tane kaldı, acele et!` : `⚡ Only ${p.stock} left, hurry!`;
+    lowStockEl.style.display = 'block';
+  } else {
+    lowStockEl.style.display = 'none';
+  }
+
+  const ownNoteEl = document.getElementById('sheetOwnProductNote');
+  const sizeRowWrap = document.getElementById('sizeRow').parentElement;
+  ownNoteEl.textContent = currentLang==='tr' ? 'Bu senin ürünün — kendi ürününü satın alamazsın.' : "This is your own product — you can't buy it yourself.";
+  ownNoteEl.style.display = p.isMine ? 'block' : 'none';
+  document.getElementById('txtSizeLabel').style.display = p.isMine ? 'none' : '';
+  document.getElementById('sizeRow').style.display = p.isMine ? 'none' : '';
+  document.getElementById('txtQtyLabel').style.display = p.isMine ? 'none' : '';
+  document.querySelector('.qty-row').style.display = p.isMine ? 'none' : '';
+  document.getElementById('addToCartBtn').style.display = p.isMine ? 'none' : '';
+
   document.getElementById('sheetThumb').onclick = () => {
     closeAllSheets();
     renderFeed(null, p.id);
@@ -2658,14 +2735,33 @@ function openProductSheet(p){
   });
   openSheetByName('product');
 }
+function cartQtyForProduct(productId){
+  return cart.filter(item => item.productId === productId).reduce((sum, item) => sum + item.qty, 0);
+}
 document.getElementById('qtyMinus').addEventListener('click', () => { if(qty > 1){ qty--; document.getElementById('qtyVal').textContent = qty; } });
-document.getElementById('qtyPlus').addEventListener('click', () => { qty++; document.getElementById('qtyVal').textContent = qty; });
+document.getElementById('qtyPlus').addEventListener('click', () => {
+  const maxAvailable = activeProduct.stock - cartQtyForProduct(activeProduct.id);
+  if(qty >= maxAvailable) return;
+  qty++;
+  document.getElementById('qtyVal').textContent = qty;
+});
 document.getElementById('addToCartBtn').addEventListener('click', () => {
+  if(activeProduct.isMine) return;
   requireAuth(() => {
-    cart.push({ productId: activeProduct.id, size: selectedSize, qty });
+    const maxAvailable = activeProduct.stock - cartQtyForProduct(activeProduct.id);
+    if(maxAvailable <= 0){
+      showToast(currentLang==='tr' ? 'Bu üründen sepetinde zaten en fazla stok kadar var' : "You already have the maximum available stock of this in your cart");
+      return;
+    }
+    const cappedQty = Math.min(qty, maxAvailable);
+    cart.push({ productId: activeProduct.id, size: selectedSize, qty: cappedQty });
     updateCartBadge();
     closeAllSheets();
-    showToast(currentLang==='tr' ? `${activeProduct.name} sepete eklendi` : `${activeProduct.name} added to cart`);
+    if(cappedQty < qty){
+      showToast(currentLang==='tr' ? `Stok sınırlı olduğu için sadece ${cappedQty} adet eklendi` : `Only ${cappedQty} added — that's all the stock available`);
+    } else {
+      showToast(currentLang==='tr' ? `${activeProduct.name} sepete eklendi` : `${activeProduct.name} added to cart`);
+    }
   });
 });
 
@@ -2787,6 +2883,8 @@ function submitComment(){
     return;
   }
   requireAuth(() => {
+    const commentedProduct = findProduct(activeCommentProductId);
+    if(commentedProduct) bumpAffinity(commentedProduct.category, 2);
     if(activeReplyTarget){
       if(!activeReplyTarget.replies) activeReplyTarget.replies = [];
       activeReplyTarget.replies.push({ author: currentUser.username, isMe: true, text, likes: 0, likedByMe: false, time: Date.now() });
@@ -3017,9 +3115,9 @@ const CATEGORY_SIZE_SETS = {
   'Ayakkabı': ['36','37','38','39','40','41','42','43','44','45'],
 };
 const SHIP_SIZE_OPTIONS = [
-  { key:'small', tr:'Küçük Paket', en:'Small Package' },
-  { key:'medium', tr:'Orta Paket', en:'Medium Package' },
-  { key:'large', tr:'Büyük Paket', en:'Large Package' },
+  { key:'small', tr:'Küçük Paket', en:'Small Package', dims:'maks. 30×20×10 cm' },
+  { key:'medium', tr:'Orta Paket', en:'Medium Package', dims:'maks. 50×40×30 cm' },
+  { key:'large', tr:'Büyük Paket', en:'Large Package', dims:'maks. 70×50×40 cm' },
 ];
 const FREE_SHIP_THRESHOLD = 300;
 const MIN_PRICE = 50;
@@ -3349,7 +3447,8 @@ function renderShipSizeChips(){
   SHIP_SIZE_OPTIONS.forEach(opt => {
     const el = document.createElement('div');
     el.className = 'option' + (uploadData.shipSize === opt.key ? ' selected' : '');
-    el.textContent = currentLang === 'tr' ? opt.tr : opt.en;
+    el.style.textAlign = 'center';
+    el.innerHTML = `${currentLang === 'tr' ? opt.tr : opt.en}<div style="font-size:10.5px; opacity:0.7; font-weight:500; margin-top:2px;">${opt.dims}</div>`;
     el.addEventListener('click', () => {
       uploadData.shipSize = opt.key;
       document.getElementById('shipSizeError').classList.remove('show');
@@ -3979,6 +4078,8 @@ function openDiscountSheet(listing){
     </div>`;
   const hasDiscount = product.discount && product.discount.price;
   document.getElementById('discountInput').value = hasDiscount ? product.discount.price : '';
+  document.getElementById('discountUnitsInput').value = hasDiscount ? product.discount.unitsLimit : '';
+  document.getElementById('discountUnitsInput').max = product.stock;
   document.getElementById('removeDiscountBtn').style.display = hasDiscount ? 'block' : 'none';
   updateDiscountEarningsPreview(product.price);
   openSheetByName('discount');
@@ -3990,7 +4091,14 @@ document.getElementById('discountInput').addEventListener('input', () => {
 function updateDiscountEarningsPreview(originalPrice){
   const val = Number(document.getElementById('discountInput').value);
   const note = document.getElementById('discountEarningsNote');
-  if(!val || val <= 0 || val >= originalPrice){ note.style.display = 'none'; return; }
+  const priceEl = document.querySelector('#discountPreview .upload-preview-price');
+  const valid = val && val > 0 && val < originalPrice;
+  if(priceEl){
+    priceEl.innerHTML = valid
+      ? `<span class="price-strike">${fmt(originalPrice)}</span> ${fmt(val)}`
+      : fmt(originalPrice);
+  }
+  if(!valid){ note.style.display = 'none'; return; }
   note.style.display = 'block';
   note.textContent = earningsNoteText(val);
 }
@@ -4006,7 +4114,18 @@ document.getElementById('saveDiscountBtn').addEventListener('click', () => {
     showToast(currentLang==='tr' ? `İndirimli fiyat en az ₺${MIN_PRICE} olmalı` : `Discounted price must be at least ₺${MIN_PRICE}`);
     return;
   }
-  product.discount = { price: val, appliedAt: Date.now() };
+  const unitsRaw = document.getElementById('discountUnitsInput').value;
+  const unitsParsed = Math.floor(Number(unitsRaw));
+  if(!unitsRaw || !unitsParsed || unitsParsed < 1){
+    showToast(currentLang==='tr' ? 'Kaç ürün için geçerli olacağını gir' : 'Enter how many units this should apply to');
+    return;
+  }
+  let unitsLimit = unitsParsed;
+  if(unitsLimit > product.stock){
+    unitsLimit = product.stock;
+    showToast(currentLang==='tr' ? `Stoğun ${product.stock} olduğu için indirim en fazla ${product.stock} adete uygulanabilir` : `You only have ${product.stock} in stock, so the discount is capped at ${product.stock} units`);
+  }
+  product.discount = { price: val, appliedAt: Date.now(), unitsLimit, unitsRemaining: unitsLimit };
   closeAllSheets();
   showToast(currentLang==='tr' ? 'İndirim uygulandı' : 'Discount applied');
   if(openSheetName === 'listings') renderListings();
