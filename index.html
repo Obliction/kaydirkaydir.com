@@ -1580,15 +1580,29 @@ const feedViewObserver = new IntersectionObserver((entries) => {
           }
         }
       }
-      // This card has become the active one in the feed — only it should be playing.
-      if(vid && !card.classList.contains('paused') && currentTab === 'feed' && openSheetName === null){
-        vid.play().catch(() => {});
+      // This card has become the active one in the feed — only it should be playing, and
+      // always from the start (a video that was scrolled away from, paused or not, begins
+      // fresh again rather than resuming where it was left).
+      card.classList.remove('paused');
+      if(vid && currentTab === 'feed' && openSheetName === null){
+        vid.currentTime = 0;
+        vid.muted = false;
+        vid.play().catch(() => {
+          // Autoplay-with-sound blocked for some reason — fall back to muted rather than
+          // leaving the card frozen; the persistent tap-anywhere unlock will fix it later.
+          vid.muted = true;
+          vid.play().catch(() => {});
+        });
+      } else if(!vid){
+        card.querySelector('.shimmer').style.animationPlayState = 'running';
       }
     } else if(vid){
       // Scrolled out of view (or the feed isn't the active tab/sheet right now) — a card that
-      // isn't on screen should never keep playing sound in the background.
+      // isn't on screen should never keep playing sound in the background, and should be
+      // reset to the start so it plays from 0 the next time it becomes active.
       vid.pause();
       vid.playbackRate = 1;
+      vid.currentTime = 0;
     }
   });
 }, { root: feed, threshold: 0.6 });
