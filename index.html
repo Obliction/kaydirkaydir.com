@@ -1364,15 +1364,16 @@ function openAuthScreen(mode, message){
   document.getElementById('authScreen').classList.remove('hidden');
   showAuthTab(mode || 'login');
   if(message) showToast(message);
+  pauseAllFeedVideos();
 }
 function closeAuthScreen(){
   document.getElementById('authScreen').classList.add('hidden');
   // Browsers only allow autoplay-with-sound once the user has genuinely interacted with the
   // page. Any card video built before that (e.g. the very first one, built on page load) had
-  // to fall back to muted — now that we know there's been a real click, give it another go.
-  document.querySelectorAll('.card-media-video').forEach(v => {
-    if(v.muted){ v.muted = false; v.play().catch(() => { v.muted = true; }); }
-  });
+  // to fall back to muted — now that we know there's been a real click, unmute it. Whether it
+  // actually plays is decided separately below, so a background/off-screen card never plays.
+  document.querySelectorAll('.card-media-video').forEach(v => { v.muted = false; });
+  if(currentTab === 'feed') resumeVisibleFeedVideo();
 }
 function requireAuth(action){
   if(authState.loggedIn){ action(); }
@@ -1544,6 +1545,8 @@ let guestFeedViewCount = 0;
 let guestAuthPromptShown = false;
 const feedViewObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
+    const card = entry.target;
+    const vid = card.querySelector('.card-media-video');
     if(entry.isIntersecting && entry.intersectionRatio > 0.6){
       const pid = Number(entry.target.dataset.productId);
       recordRecentlyViewed(pid);
@@ -1562,6 +1565,15 @@ const feedViewObserver = new IntersectionObserver((entries) => {
           }
         }
       }
+      // This card has become the active one in the feed — only it should be playing.
+      if(vid && !card.classList.contains('paused') && currentTab === 'feed' && openSheetName === null){
+        vid.play().catch(() => {});
+      }
+    } else if(vid){
+      // Scrolled out of view (or the feed isn't the active tab/sheet right now) — a card that
+      // isn't on screen should never keep playing sound in the background.
+      vid.pause();
+      vid.playbackRate = 1;
     }
   });
 }, { root: feed, threshold: 0.6 });
@@ -1615,7 +1627,7 @@ function buildFeedCard(p, isFirst){
   `;
   feed.appendChild(card);
 
-  if(hasRealVideo){
+  if(hasRealVideo && currentTab === 'feed' && openSheetName === null){
     const vidEl = card.querySelector('.card-media-video');
     vidEl.muted = false;
     vidEl.play().catch(() => {
@@ -1654,7 +1666,7 @@ function buildFeedCard(p, isFirst){
         if(vidEl) vidEl.playbackRate = 1;
         // Confirm the return to normal speed, then fade the badge out rather than snapping it away.
         speedCircle.textContent = '1x';
-        releaseFadeTimer = setTimeout(() => { speedIndicator.classList.remove('show'); }, 1500);
+        releaseFadeTimer = setTimeout(() => { speedIndicator.classList.remove('show'); }, 500);
       }
     }
     toggleEl.addEventListener('pointerup', endHold);
@@ -1803,6 +1815,21 @@ function toggleFavorite(id){
 }
 
 /* ---------- TAB SWITCHING ---------- */
+function pauseAllFeedVideos(){
+  document.querySelectorAll('.card-media-video').forEach(v => { v.pause(); v.playbackRate = 1; });
+}
+function resumeVisibleFeedVideo(){
+  const cards = [...document.querySelectorAll('.card')];
+  const active = cards.find(c => {
+    const r = c.getBoundingClientRect();
+    const feedR = feed.getBoundingClientRect();
+    return r.top < feedR.top + feedR.height * 0.4 && r.bottom > feedR.top + feedR.height * 0.4;
+  });
+  if(active && !active.classList.contains('paused')){
+    const vid = active.querySelector('.card-media-video');
+    if(vid) vid.play().catch(() => {});
+  }
+}
 function switchTab(tab){
   currentTab = tab;
   document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
@@ -1811,6 +1838,7 @@ function switchTab(tab){
   if(tab === 'search') renderGrid();
   if(tab === 'cart') renderCart();
   if(tab === 'profile') renderProfileGuestState();
+  if(tab === 'feed') resumeVisibleFeedVideo(); else pauseAllFeedVideos();
 }
 document.querySelectorAll('.nav-item[data-tab]').forEach(n => n.addEventListener('click', () => switchTab(n.dataset.tab)));
 document.getElementById('searchShortcut').addEventListener('click', () => switchTab('search'));
@@ -2348,11 +2376,13 @@ function openSheetByName(name){
   openSheetName = name;
   overlay.classList.add('open');
   sheets[name].classList.add('open');
+  pauseAllFeedVideos();
 }
 function closeAllSheets(){
   overlay.classList.remove('open');
   Object.values(sheets).forEach(s => { s.classList.remove('open'); s.classList.remove('expanded'); });
   openSheetName = null;
+  if(currentTab === 'feed') resumeVisibleFeedVideo();
 }
 overlay.addEventListener('click', closeAllSheets);
 document.getElementById('closeSheetBtn').addEventListener('click', closeAllSheets);
@@ -2939,9 +2969,11 @@ function openUploadScreen(){
   updateShipOriginPill();
   goToUploadStep(1);
   document.getElementById('uploadScreen').classList.remove('hidden');
+  pauseAllFeedVideos();
 }
 function closeUploadScreen(){
   document.getElementById('uploadScreen').classList.add('hidden');
+  if(currentTab === 'feed') resumeVisibleFeedVideo();
 }
 document.getElementById('uploadFabBtn').addEventListener('click', () => requireAuth(openUploadScreen));
 document.getElementById('uploadCloseBtn').addEventListener('click', closeUploadScreen);
