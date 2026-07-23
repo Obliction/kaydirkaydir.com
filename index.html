@@ -3220,12 +3220,12 @@ document.getElementById('videoFileInput').addEventListener('change', (e) => {
     video.play().catch(() => {});
   }, { once:true });
 });
-let thumbScrubDuration = 1;
 function setThumbScrubUI(ratio){
   const pct = Math.max(0, Math.min(1, ratio)) * 100;
   document.getElementById('thumbScrubFill').style.width = pct + '%';
   document.getElementById('thumbScrubHandle').style.left = pct + '%';
 }
+let thumbScrubDuration = 1;
 {
   // Custom pointer-based scrubber for picking the cover frame — a native <input type=range>
   // has inconsistent touch-drag behavior across mobile browsers, so this mirrors the same
@@ -3235,29 +3235,36 @@ function setThumbScrubUI(ratio){
   let thumbScrubbing = false;
   function thumbRatioFromEvent(e){
     const rect = thumbScrubTrack.getBoundingClientRect();
-    return (e.clientX - rect.left) / rect.width;
+    return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  }
+  function seekTo(ratio){
+    const video = document.getElementById('videoPreview');
+    const dur = isFinite(video.duration) && video.duration > 0 ? video.duration : thumbScrubDuration;
+    setThumbScrubUI(ratio);
+    video.currentTime = ratio * dur;
   }
   thumbScrubEl.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
     e.stopPropagation();
     thumbScrubbing = true;
     thumbScrubEl.classList.add('scrubbing');
-    const video = document.getElementById('videoPreview');
-    video.pause();
+    document.getElementById('videoPreview').pause();
     setPreviewPlayBtnState(false);
-    const ratio = thumbRatioFromEvent(e);
-    setThumbScrubUI(ratio);
-    video.currentTime = ratio * thumbScrubDuration;
+    seekTo(thumbRatioFromEvent(e));
     thumbScrubEl.setPointerCapture(e.pointerId);
   });
   thumbScrubEl.addEventListener('pointermove', (e) => {
     if(!thumbScrubbing) return;
+    e.preventDefault();
     e.stopPropagation();
-    const ratio = thumbRatioFromEvent(e);
-    setThumbScrubUI(ratio);
-    document.getElementById('videoPreview').currentTime = ratio * thumbScrubDuration;
+    seekTo(thumbRatioFromEvent(e));
   });
-  function endThumbScrub(){
+  function endThumbScrub(e){
+    if(!thumbScrubbing) return;
     thumbScrubbing = false;
+    // Snap to the exact release position one more time as a safety net, in case any
+    // intermediate pointermove events were dropped by the browser mid-drag.
+    if(e && typeof e.clientX === 'number') seekTo(thumbRatioFromEvent(e));
     thumbScrubEl.classList.remove('scrubbing');
   }
   thumbScrubEl.addEventListener('pointerup', endThumbScrub);
