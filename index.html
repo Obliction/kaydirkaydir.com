@@ -3227,23 +3227,30 @@ function setThumbScrubUI(ratio){
 }
 let thumbScrubDuration = 1;
 {
-  // Custom pointer-based scrubber for picking the cover frame — a native <input type=range>
-  // has inconsistent touch-drag behavior across mobile browsers, so this mirrors the same
-  // pointerdown/pointermove/pointerup approach already working for the feed's video progress bar.
+  // Custom scrubber for picking the cover frame. Both Pointer Events AND raw touch events are
+  // wired up (some mobile browsers handle pointer events on custom, non-form elements
+  // inconsistently) — whichever fires, the same coordinate math and seek logic runs.
   const thumbScrubEl = document.getElementById('thumbFrameScrub');
   const thumbScrubTrack = thumbScrubEl.querySelector('.thumb-scrub-track');
   let thumbScrubbing = false;
+  function clientXFromEvent(e){
+    if(e.touches && e.touches.length) return e.touches[0].clientX;
+    if(e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
+    return e.clientX;
+  }
   function thumbRatioFromEvent(e){
     const rect = thumbScrubTrack.getBoundingClientRect();
-    return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    if(!rect.width) return null; // layout not ready yet — ignore rather than produce NaN
+    return Math.max(0, Math.min(1, (clientXFromEvent(e) - rect.left) / rect.width));
   }
   function seekTo(ratio){
+    if(ratio === null) return;
     const video = document.getElementById('videoPreview');
     const dur = isFinite(video.duration) && video.duration > 0 ? video.duration : thumbScrubDuration;
     setThumbScrubUI(ratio);
     video.currentTime = ratio * dur;
   }
-  thumbScrubEl.addEventListener('pointerdown', (e) => {
+  function startScrub(e){
     e.preventDefault();
     e.stopPropagation();
     thumbScrubbing = true;
@@ -3251,24 +3258,32 @@ let thumbScrubDuration = 1;
     document.getElementById('videoPreview').pause();
     setPreviewPlayBtnState(false);
     seekTo(thumbRatioFromEvent(e));
-    thumbScrubEl.setPointerCapture(e.pointerId);
-  });
-  thumbScrubEl.addEventListener('pointermove', (e) => {
+    if(e.pointerId !== undefined){
+      try{ thumbScrubEl.setPointerCapture(e.pointerId); }catch(err){ /* not all event types support this */ }
+    }
+  }
+  function moveScrub(e){
     if(!thumbScrubbing) return;
     e.preventDefault();
     e.stopPropagation();
     seekTo(thumbRatioFromEvent(e));
-  });
+  }
   function endThumbScrub(e){
     if(!thumbScrubbing) return;
     thumbScrubbing = false;
     // Snap to the exact release position one more time as a safety net, in case any
-    // intermediate pointermove events were dropped by the browser mid-drag.
-    if(e && typeof e.clientX === 'number') seekTo(thumbRatioFromEvent(e));
+    // intermediate move events were dropped mid-drag.
+    if(e) seekTo(thumbRatioFromEvent(e));
     thumbScrubEl.classList.remove('scrubbing');
   }
+  thumbScrubEl.addEventListener('pointerdown', startScrub);
+  thumbScrubEl.addEventListener('pointermove', moveScrub);
   thumbScrubEl.addEventListener('pointerup', endThumbScrub);
   thumbScrubEl.addEventListener('pointercancel', endThumbScrub);
+  thumbScrubEl.addEventListener('touchstart', startScrub, { passive:false });
+  thumbScrubEl.addEventListener('touchmove', moveScrub, { passive:false });
+  thumbScrubEl.addEventListener('touchend', endThumbScrub, { passive:false });
+  thumbScrubEl.addEventListener('touchcancel', endThumbScrub, { passive:false });
 }
 function setPreviewPlayBtnState(isPlaying){
   const icon = document.getElementById('previewPlayIcon');
