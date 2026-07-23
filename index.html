@@ -1540,6 +1540,14 @@ function findProduct(id){ return products.find(p => p.id === id); }
 
 /* ---------- FEED ---------- */
 const feed = document.getElementById('feed');
+let firstInteractionHandled = false;
+function unlockVideoSoundOnFirstInteraction(){
+  if(firstInteractionHandled) return;
+  firstInteractionHandled = true;
+  document.querySelectorAll('.card-media-video').forEach(v => { v.muted = false; });
+  if(currentTab === 'feed' && openSheetName === null) resumeVisibleFeedVideo();
+}
+document.addEventListener('pointerdown', unlockVideoSoundOnFirstInteraction, { capture:true, once:true });
 const viewedProductIds = new Set();
 let guestFeedViewCount = 0;
 let guestAuthPromptShown = false;
