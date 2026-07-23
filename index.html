@@ -206,7 +206,7 @@
   .sheet-overlay.open{ opacity:1; pointer-events:auto; }
   .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:90; background:var(--panel); border-radius:26px 26px 0 0; padding:12px 20px calc(env(safe-area-inset-bottom, 0px) + 20px); transform:translateY(100%); transition:transform .32s cubic-bezier(.32,.72,0,1), max-height .38s cubic-bezier(.32,.72,0,1), height .38s cubic-bezier(.32,.72,0,1), box-shadow .32s; max-height:78%; min-height:340px; overflow-y:auto; box-shadow:none; }
   .sheet.open{ transform:translateY(0); box-shadow:0 -20px 60px rgba(0,0,0,0.5); }
-  .sheet-handle{ position:relative; width:36px; height:4px; border-radius:3px; background:var(--handle-color); margin:0 auto 16px; }
+  .sheet-handle{ position:relative; width:36px; height:4px; border-radius:3px; background:var(--handle-color); margin:0 auto 16px; touch-action:none; }
   .sheet-handle::before{ content:''; position:absolute; top:-18px; left:-40px; right:-40px; bottom:-18px; }
 
   .sheet-top{ display:flex; gap:14px; margin-bottom:18px; }
@@ -613,7 +613,7 @@
                 <svg id="previewPlayIcon" width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg>
                 <span id="txtPreviewPlay">Videoyu oynat</span>
               </div>
-              <input type="range" id="thumbFrameSlider" min="0" max="1" step="0.01" value="0" style="width:100%; accent-color:var(--accent);">
+              <input type="range" id="thumbFrameSlider" min="0" max="1" step="0.01" value="0" style="width:100%; accent-color:var(--accent); touch-action:none;">
               <div class="add-photo-btn" id="useThisFrameBtn" style="text-align:center; margin-top:8px;">
                 <span id="txtUseThisFrame">Bu kareyi kapak yap</span>
               </div>
@@ -1553,12 +1553,13 @@ function findProduct(id){ return products.find(p => p.id === id); }
 /* ---------- FEED ---------- */
 const feed = document.getElementById('feed');
 function unlockVideoSoundOnInteraction(){
-  document.querySelectorAll('.card-media-video, #videoPreview').forEach(v => {
-    if(v.muted){
-      v.muted = false;
-      if(!v.paused || (currentTab === 'feed' && openSheetName === null)) v.play().catch(() => {});
-    }
-  });
+  document.querySelectorAll('.card-media-video, #videoPreview').forEach(v => { v.muted = false; });
+  // Unmuting is harmless even for off-screen/paused cards, but *playing* one must stay scoped
+  // to whichever single card is actually the active one right now — otherwise every muted
+  // card in the DOM would wake up and play at once (audio with nothing visibly playing).
+  if(currentTab === 'feed' && openSheetName === null) resumeVisibleFeedVideo();
+  const previewVid = document.getElementById('videoPreview');
+  if(previewVid && !previewVid.paused) previewVid.play().catch(() => {});
 }
 document.addEventListener('pointerdown', unlockVideoSoundOnInteraction, { capture:true });
 document.addEventListener('click', unlockVideoSoundOnInteraction, { capture:false });
@@ -1668,17 +1669,10 @@ function buildFeedCard(p, isFirst){
     </div>
   `;
   feed.appendChild(card);
-
-  if(hasRealVideo && currentTab === 'feed' && openSheetName === null){
-    const vidEl = card.querySelector('.card-media-video');
-    vidEl.muted = false;
-    vidEl.play().catch(() => {
-      // Some browsers block autoplay with sound until there's been a user gesture on the
-      // page; fall back to muted playback rather than leaving the video frozen.
-      vidEl.muted = true;
-      vidEl.play().catch(() => {});
-    });
-  }
+  // Playback is intentionally NOT started here — only the card the IntersectionObserver
+  // finds actually in view should ever play (see feedViewObserver below). Autoplaying every
+  // real-video card as soon as it's built meant several videos could end up playing
+  // simultaneously in the background after a feed rebuild (e.g. on refresh).
 
   {
     const toggleEl = card.querySelector('.play-toggle');
@@ -1689,9 +1683,17 @@ function buildFeedCard(p, isFirst){
     let releaseFadeTimer = null;
     let isHolding = false;
     let holdSuppressClick = false;
-    toggleEl.addEventListener('pointerdown', () => {
+    let holdStartX = 0, holdStartY = 0;
+    function cancelHoldIfMoved(e){
+      if(holdTimer === null) return;
+      const dx = Math.abs(e.clientX - holdStartX), dy = Math.abs(e.clientY - holdStartY);
+      if(dx > 10 || dy > 10){ clearTimeout(holdTimer); holdTimer = null; }
+    }
+    toggleEl.addEventListener('pointerdown', (e) => {
       holdSuppressClick = false;
+      holdStartX = e.clientX; holdStartY = e.clientY;
       holdTimer = setTimeout(() => {
+        holdTimer = null;
         if(card.classList.contains('paused')) return; // don't fast-forward a frozen frame
         isHolding = true;
         holdSuppressClick = true;
@@ -1701,6 +1703,7 @@ function buildFeedCard(p, isFirst){
         speedIndicator.classList.add('show');
       }, 220);
     });
+    toggleEl.addEventListener('pointermove', cancelHoldIfMoved);
     function endHold(){
       clearTimeout(holdTimer);
       if(isHolding){
@@ -3138,7 +3141,15 @@ function goToUploadStep(step){
 }
 
 document.getElementById('videoDropZone').addEventListener('click', () => document.getElementById('videoFileInput').click());
-function captureCurrentFrameAsThumb(video){
+function captureCurrentFrameAsThumb(video, attemptsLeft){
+  if(attemptsLeft === undefined) attemptsLeft = 6;
+  if(!video.videoWidth && attemptsLeft > 0){
+    // Some mobile browsers fire 'seeked' slightly before the frame is actually decoded and
+    // videoWidth/videoHeight are populated — wait a beat and try again rather than silently
+    // ending up with no cover photo.
+    requestAnimationFrame(() => captureCurrentFrameAsThumb(video, attemptsLeft - 1));
+    return;
+  }
   try{
     const canvas = document.getElementById('thumbCanvas');
     canvas.width = video.videoWidth || 400;
@@ -3363,7 +3374,15 @@ function earningsNoteText(price){
 }
 
 function renderUploadPreview(){
-  document.getElementById('previewThumb').style.backgroundImage = uploadData.thumbDataUrl ? `url('${uploadData.thumbDataUrl}')` : 'none';
+  if(!uploadData.thumbDataUrl){
+    const video = document.getElementById('videoPreview');
+    if(video && video.videoWidth) captureCurrentFrameAsThumb(video, 0);
+    if(!uploadData.thumbDataUrl){
+      const pair = GRADIENT_PAIRS[Math.floor(Math.random() * GRADIENT_PAIRS.length)];
+      uploadData.thumbDataUrl = gradientThumb(pair[0], pair[1], 135);
+    }
+  }
+  document.getElementById('previewThumb').style.backgroundImage = `url('${uploadData.thumbDataUrl}')`;
   document.getElementById('previewName').textContent = uploadData.name || (currentLang==='tr' ? 'Ürün Adı' : 'Product Name');
   const price = Number(uploadData.price) || 0;
   document.getElementById('previewPrice').textContent = fmt(price);
