@@ -96,6 +96,9 @@
   .play-toggle{ position:absolute; inset:0; z-index:5; cursor:pointer; }
   .pause-icon{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.6); width:64px; height:64px; border-radius:50%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s, transform .2s; pointer-events:none; }
   .card.paused .pause-icon{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .speed-indicator{ position:absolute; inset:0; z-index:6; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:0; transition:opacity .3s ease; }
+  .speed-indicator.show{ opacity:1; }
+  .speed-indicator .speed-circle{ width:60px; height:60px; border-radius:50%; background:rgba(0,0,0,0.35); color:#fff; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:15px; display:flex; align-items:center; justify-content:center; }
 
   .rail{ position:absolute; right:12px; bottom:190px; z-index:20; display:flex; flex-direction:column; align-items:center; gap:18px; }
   .rail-btn{ display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
@@ -1364,6 +1367,12 @@ function openAuthScreen(mode, message){
 }
 function closeAuthScreen(){
   document.getElementById('authScreen').classList.add('hidden');
+  // Browsers only allow autoplay-with-sound once the user has genuinely interacted with the
+  // page. Any card video built before that (e.g. the very first one, built on page load) had
+  // to fall back to muted — now that we know there's been a real click, give it another go.
+  document.querySelectorAll('.card-media-video').forEach(v => {
+    if(v.muted){ v.muted = false; v.play().catch(() => { v.muted = true; }); }
+  });
 }
 function requireAuth(action){
   if(authState.loggedIn){ action(); }
@@ -1574,6 +1583,7 @@ function buildFeedCard(p, isFirst){
     ${mediaHtml}
     <div class="play-toggle"></div>
     <div class="pause-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg></div>
+    <div class="speed-indicator"><div class="speed-circle">2x</div></div>
     ${isFirst ? `<div class="swipe-hint"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/></svg><span>kaydır</span></div>` : ''}
     <div class="rail">
       <div class="rail-btn" data-role="avatar"><div class="seller-avatar" style="background-image:url('${p.avatar}')"></div></div>
@@ -1619,7 +1629,10 @@ function buildFeedCard(p, isFirst){
   {
     const toggleEl = card.querySelector('.play-toggle');
     const vidEl = hasRealVideo ? card.querySelector('.card-media-video') : null;
+    const speedIndicator = card.querySelector('.speed-indicator');
+    const speedCircle = card.querySelector('.speed-circle');
     let holdTimer = null;
+    let releaseFadeTimer = null;
     let isHolding = false;
     let holdSuppressClick = false;
     toggleEl.addEventListener('pointerdown', () => {
@@ -1629,6 +1642,9 @@ function buildFeedCard(p, isFirst){
         isHolding = true;
         holdSuppressClick = true;
         if(vidEl) vidEl.playbackRate = 2;
+        clearTimeout(releaseFadeTimer);
+        speedCircle.textContent = '2x';
+        speedIndicator.classList.add('show');
       }, 220);
     });
     function endHold(){
@@ -1636,6 +1652,9 @@ function buildFeedCard(p, isFirst){
       if(isHolding){
         isHolding = false;
         if(vidEl) vidEl.playbackRate = 1;
+        // Confirm the return to normal speed, then fade the badge out rather than snapping it away.
+        speedCircle.textContent = '1x';
+        releaseFadeTimer = setTimeout(() => { speedIndicator.classList.remove('show'); }, 1500);
       }
     }
     toggleEl.addEventListener('pointerup', endHold);
