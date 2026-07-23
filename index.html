@@ -3227,63 +3227,45 @@ function setThumbScrubUI(ratio){
 }
 let thumbScrubDuration = 1;
 {
-  // Custom scrubber for picking the cover frame. Both Pointer Events AND raw touch events are
-  // wired up (some mobile browsers handle pointer events on custom, non-form elements
-  // inconsistently) — whichever fires, the same coordinate math and seek logic runs.
+  // Exact port of the feed's video-progress bar, which is confirmed to work reliably on
+  // mobile — the key difference from earlier attempts is that the video is only actually
+  // seeked ONCE, on release; during the drag itself only the visual fill/handle move.
   const thumbScrubEl = document.getElementById('thumbFrameScrub');
   const thumbScrubTrack = thumbScrubEl.querySelector('.thumb-scrub-track');
-  let thumbScrubbing = false;
-  function clientXFromEvent(e){
-    if(e.touches && e.touches.length) return e.touches[0].clientX;
-    if(e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
-    return e.clientX;
-  }
-  function thumbRatioFromEvent(e){
+  let scrubbing = false;
+  let wasPlayingBeforeScrub = false;
+  function ratioFromEvent(e){
     const rect = thumbScrubTrack.getBoundingClientRect();
-    if(!rect.width) return null; // layout not ready yet — ignore rather than produce NaN
-    return Math.max(0, Math.min(1, (clientXFromEvent(e) - rect.left) / rect.width));
+    return (e.clientX - rect.left) / rect.width;
   }
-  function seekTo(ratio){
-    if(ratio === null) return;
+  thumbScrubEl.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    scrubbing = true;
+    thumbScrubEl.classList.add('scrubbing');
+    const video = document.getElementById('videoPreview');
+    wasPlayingBeforeScrub = !video.paused;
+    video.pause();
+    setPreviewPlayBtnState(false);
+    setThumbScrubUI(ratioFromEvent(e));
+    thumbScrubEl.setPointerCapture(e.pointerId);
+  });
+  thumbScrubEl.addEventListener('pointermove', (e) => {
+    if(!scrubbing) return;
+    e.stopPropagation();
+    setThumbScrubUI(ratioFromEvent(e));
+  });
+  function endThumbScrub(e){
+    if(!scrubbing) return;
+    scrubbing = false;
+    thumbScrubEl.classList.remove('scrubbing');
     const video = document.getElementById('videoPreview');
     const dur = isFinite(video.duration) && video.duration > 0 ? video.duration : thumbScrubDuration;
-    setThumbScrubUI(ratio);
-    video.currentTime = ratio * dur;
+    video.currentTime = Math.max(0, Math.min(1, ratioFromEvent(e))) * dur;
+    if(wasPlayingBeforeScrub){ video.play().catch(() => {}); setPreviewPlayBtnState(true); }
   }
-  function startScrub(e){
-    e.preventDefault();
-    e.stopPropagation();
-    thumbScrubbing = true;
-    thumbScrubEl.classList.add('scrubbing');
-    document.getElementById('videoPreview').pause();
-    setPreviewPlayBtnState(false);
-    seekTo(thumbRatioFromEvent(e));
-    if(e.pointerId !== undefined){
-      try{ thumbScrubEl.setPointerCapture(e.pointerId); }catch(err){ /* not all event types support this */ }
-    }
-  }
-  function moveScrub(e){
-    if(!thumbScrubbing) return;
-    e.preventDefault();
-    e.stopPropagation();
-    seekTo(thumbRatioFromEvent(e));
-  }
-  function endThumbScrub(e){
-    if(!thumbScrubbing) return;
-    thumbScrubbing = false;
-    // Snap to the exact release position one more time as a safety net, in case any
-    // intermediate move events were dropped mid-drag.
-    if(e) seekTo(thumbRatioFromEvent(e));
-    thumbScrubEl.classList.remove('scrubbing');
-  }
-  thumbScrubEl.addEventListener('pointerdown', startScrub);
-  thumbScrubEl.addEventListener('pointermove', moveScrub);
   thumbScrubEl.addEventListener('pointerup', endThumbScrub);
   thumbScrubEl.addEventListener('pointercancel', endThumbScrub);
-  thumbScrubEl.addEventListener('touchstart', startScrub, { passive:false });
-  thumbScrubEl.addEventListener('touchmove', moveScrub, { passive:false });
-  thumbScrubEl.addEventListener('touchend', endThumbScrub, { passive:false });
-  thumbScrubEl.addEventListener('touchcancel', endThumbScrub, { passive:false });
+  thumbScrubEl.addEventListener('click', (e) => e.stopPropagation());
 }
 function setPreviewPlayBtnState(isPlaying){
   const icon = document.getElementById('previewPlayIcon');
