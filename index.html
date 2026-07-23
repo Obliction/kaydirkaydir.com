@@ -3680,12 +3680,16 @@ function renderListings(){
         ${product.discount ? `<span class="stock-alert-text" style="color:var(--success);">${currentLang==='tr'?'İndirimli':'Discounted'}: ${fmt(product.discount.price)}</span>` : ''}
         <div class="mini-btn" data-action="discount">${product.discount ? (currentLang==='tr'?'İndirimi Düzenle':'Edit Discount') : (currentLang==='tr'?'İndirim Uygula':'Apply Discount')}</div>
       </div>` : '';
+    const originalNet = earningsBreakdown(l.price).netEarnings;
+    const earningsDisplay = (product && product.discount && product.discount.price)
+      ? `<span class="price-strike">${fmt(originalNet)}</span> ${fmt(earningsBreakdown(product.discount.price).netEarnings)}`
+      : fmt(originalNet);
     el.innerHTML = `
       <div class="listing-thumb" style="background-image:url('${l.thumb || ''}')"></div>
       <div class="listing-meta">
         <div class="listing-name">${l.name}</div>
         <div class="listing-price">${fmt(l.price)}</div>
-        <div class="listing-earnings">${currentLang==='tr'?'Sana geçecek':'You receive'}: ${fmt(earningsBreakdown(l.price).netEarnings)}</div>
+        <div class="listing-earnings">${currentLang==='tr'?'Sana geçecek':'You receive'}: ${earningsDisplay}</div>
         ${listingStatsHtml(product)}
         ${alertHtml}
         ${discountHtml}
