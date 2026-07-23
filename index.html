@@ -99,6 +99,11 @@
   .speed-indicator{ position:absolute; inset:0; z-index:6; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:0; transition:opacity .3s ease; }
   .speed-indicator.show{ opacity:1; }
   .speed-indicator .speed-circle{ width:60px; height:60px; border-radius:50%; background:rgba(0,0,0,0.35); color:#fff; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:15px; display:flex; align-items:center; justify-content:center; }
+  .video-progress{ position:absolute; left:16px; right:16px; bottom:78px; z-index:22; height:20px; display:flex; align-items:center; cursor:pointer; touch-action:none; }
+  .video-progress-track{ position:relative; width:100%; height:3px; background:rgba(255,255,255,0.3); border-radius:2px; }
+  .video-progress-fill{ position:absolute; top:0; left:0; height:100%; width:0%; background:#fff; border-radius:2px; }
+  .video-progress-handle{ position:absolute; top:50%; left:0%; width:12px; height:12px; border-radius:50%; background:#fff; transform:translate(-50%,-50%); box-shadow:0 1px 4px rgba(0,0,0,0.4); transition:transform .15s; }
+  .video-progress.scrubbing .video-progress-handle{ transform:translate(-50%,-50%) scale(1.4); }
 
   .rail{ position:absolute; right:12px; bottom:190px; z-index:20; display:flex; flex-direction:column; align-items:center; gap:18px; }
   .rail-btn{ display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
@@ -1540,14 +1545,16 @@ function findProduct(id){ return products.find(p => p.id === id); }
 
 /* ---------- FEED ---------- */
 const feed = document.getElementById('feed');
-let firstInteractionHandled = false;
-function unlockVideoSoundOnFirstInteraction(){
-  if(firstInteractionHandled) return;
-  firstInteractionHandled = true;
-  document.querySelectorAll('.card-media-video').forEach(v => { v.muted = false; });
-  if(currentTab === 'feed' && openSheetName === null) resumeVisibleFeedVideo();
+function unlockVideoSoundOnInteraction(){
+  document.querySelectorAll('.card-media-video').forEach(v => {
+    if(v.muted){
+      v.muted = false;
+      if(!v.paused || (currentTab === 'feed' && openSheetName === null)) v.play().catch(() => {});
+    }
+  });
 }
-document.addEventListener('pointerdown', unlockVideoSoundOnFirstInteraction, { capture:true, once:true });
+document.addEventListener('pointerdown', unlockVideoSoundOnInteraction, { capture:true });
+document.addEventListener('click', unlockVideoSoundOnInteraction, { capture:false });
 const viewedProductIds = new Set();
 let guestFeedViewCount = 0;
 let guestAuthPromptShown = false;
@@ -1604,6 +1611,12 @@ function buildFeedCard(p, isFirst){
     <div class="play-toggle"></div>
     <div class="pause-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg></div>
     <div class="speed-indicator"><div class="speed-circle">2x</div></div>
+    ${hasRealVideo ? `<div class="video-progress" data-role="videoProgress">
+      <div class="video-progress-track">
+        <div class="video-progress-fill"></div>
+        <div class="video-progress-handle"></div>
+      </div>
+    </div>` : ''}
     ${isFirst ? `<div class="swipe-hint"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/></svg><span>kaydır</span></div>` : ''}
     <div class="rail">
       <div class="rail-btn" data-role="avatar"><div class="seller-avatar" style="background-image:url('${p.avatar}')"></div></div>
@@ -1689,6 +1702,52 @@ function buildFeedCard(p, isFirst){
         card.querySelector('.shimmer').style.animationPlayState = card.classList.contains('paused') ? 'paused' : 'running';
       }
     });
+  }
+
+  if(hasRealVideo){
+    const vidEl = card.querySelector('.card-media-video');
+    const progressEl = card.querySelector('.video-progress');
+    const trackEl = card.querySelector('.video-progress-track');
+    const fillEl = card.querySelector('.video-progress-fill');
+    const handleEl = card.querySelector('.video-progress-handle');
+    let scrubbing = false;
+    let wasPlayingBeforeScrub = false;
+    function setProgressUI(ratio){
+      const pct = Math.max(0, Math.min(1, ratio)) * 100;
+      fillEl.style.width = pct + '%';
+      handleEl.style.left = pct + '%';
+    }
+    vidEl.addEventListener('timeupdate', () => {
+      if(!scrubbing && vidEl.duration) setProgressUI(vidEl.currentTime / vidEl.duration);
+    });
+    function ratioFromEvent(e){
+      const rect = trackEl.getBoundingClientRect();
+      return (e.clientX - rect.left) / rect.width;
+    }
+    progressEl.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      scrubbing = true;
+      progressEl.classList.add('scrubbing');
+      wasPlayingBeforeScrub = !vidEl.paused;
+      vidEl.pause();
+      setProgressUI(ratioFromEvent(e));
+      progressEl.setPointerCapture(e.pointerId);
+    });
+    progressEl.addEventListener('pointermove', (e) => {
+      if(!scrubbing) return;
+      e.stopPropagation();
+      setProgressUI(ratioFromEvent(e));
+    });
+    function endScrub(e){
+      if(!scrubbing) return;
+      scrubbing = false;
+      progressEl.classList.remove('scrubbing');
+      if(vidEl.duration) vidEl.currentTime = Math.max(0, Math.min(1, ratioFromEvent(e))) * vidEl.duration;
+      if(wasPlayingBeforeScrub && !card.classList.contains('paused')) vidEl.play().catch(() => {});
+    }
+    progressEl.addEventListener('pointerup', endScrub);
+    progressEl.addEventListener('pointercancel', endScrub);
+    progressEl.addEventListener('click', (e) => e.stopPropagation());
   }
 
   const likeBtn = card.querySelector('[data-role="like"]');
@@ -1797,6 +1856,33 @@ feedNavItem.addEventListener('click', () => {
   if(now - lastFeedTapTime < 500) refreshFeed();
   lastFeedTapTime = now;
 });
+
+/* Refresh: rapid double-tap on search / cart / profile entry points (top icons + bottom nav) */
+function refreshSearchView(){
+  renderGrid();
+  showToast(currentLang === 'tr' ? 'Arama yenilendi' : 'Search refreshed');
+}
+function refreshCartView(){
+  renderCart();
+  showToast(currentLang === 'tr' ? 'Sepet yenilendi' : 'Cart refreshed');
+}
+function refreshProfileView(){
+  renderProfileGuestState();
+  showToast(currentLang === 'tr' ? 'Profil yenilendi' : 'Profile refreshed');
+}
+function setupDoubleTapRefresh(selector, refreshFn){
+  document.querySelectorAll(selector).forEach(el => {
+    let lastTap = 0;
+    el.addEventListener('click', () => {
+      const now = Date.now();
+      if(now - lastTap < 500) refreshFn();
+      lastTap = now;
+    });
+  });
+}
+setupDoubleTapRefresh('#searchShortcut, .nav-item[data-tab="search"]', refreshSearchView);
+setupDoubleTapRefresh('#cartBtnTop, .nav-item[data-tab="cart"]', refreshCartView);
+setupDoubleTapRefresh('.nav-item[data-tab="profile"]', refreshProfileView);
 
 /* Refresh: pulling down past the top of the very first video */
 let feedTouchStartY = null;
