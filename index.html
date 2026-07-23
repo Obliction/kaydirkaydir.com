@@ -228,6 +228,7 @@
   .photo-thumb{ position:relative; width:56px; height:56px; border-radius:10px; background-size:cover; background-position:center; }
   .photo-remove{ position:absolute; top:-5px; right:-5px; width:18px; height:18px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; }
   .add-photo-btn{ border:1.5px dashed var(--border-soft-strong); border-radius:14px; padding:10px; text-align:center; font-size:12px; font-weight:600; color:var(--text-dim); cursor:pointer; margin-bottom:16px; }
+  .preview-play-btn{ display:inline-flex; align-items:center; gap:8px; background:var(--accent); color:#fff; font-size:12.5px; font-weight:700; border-radius:20px; padding:9px 16px; margin-bottom:10px; cursor:pointer; width:fit-content; }
   .photo-gallery{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; margin-top:16px; border-radius:14px; cursor:grab; }
   .photo-gallery::-webkit-scrollbar{ display:none; }
 
@@ -596,18 +597,22 @@
             <div class="upload-step-sub" id="uploadStep1Sub">Ürününü en iyi anlatan kısa bir video seç</div>
             <div class="ship-origin-pill" id="uploadShipOriginPill">📦 <span id="uploadShipOriginText">—</span> · <span id="uploadShipOriginEdit" style="text-decoration:underline;">Değiştir</span></div>
             <div class="video-drop-zone" id="videoDropZone">
-              <video id="videoPreview" class="video-preview-el" style="display:none;" muted loop playsinline></video>
+              <video id="videoPreview" class="video-preview-el" style="display:none;" loop playsinline></video>
               <canvas id="thumbCanvas" style="display:none;"></canvas>
               <div id="videoDropContent">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#A79BC7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="16" rx="2"/><polygon points="16 9 22 6 22 18 16 15"/></svg>
                 <div class="video-drop-text" id="videoDropText">Video seçmek için dokun</div>
-                <div class="video-drop-sub" id="videoDropSub">MP4, MOV — en fazla 60 sn</div>
+                <div class="video-drop-sub" id="videoDropSub">MP4, MOV — en fazla 2 dk</div>
               </div>
             </div>
             <div class="field-error" id="videoError">Video yüklemediniz, lütfen devam etmeden önce bir video seç.</div>
-            <div class="field-error" id="videoDurationError">Bu video 60 saniyeden uzun görünüyor — 60 sn altı videolar akışta daha iyi performans gösterir.</div>
+            <div class="field-error" id="videoDurationError">Lütfen 2 dakika veya daha kısa bir video seç.</div>
             <div id="thumbPickerWrap" style="display:none; margin-top:14px;">
               <label class="auth-field-label" id="thumbPickerLabel">Kapak fotoğrafı için bir kare seç</label>
+              <div class="preview-play-btn" id="previewPlayBtn">
+                <svg id="previewPlayIcon" width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg>
+                <span id="txtPreviewPlay">Videoyu oynat</span>
+              </div>
               <input type="range" id="thumbFrameSlider" min="0" max="1" step="0.01" value="0" style="width:100%; accent-color:var(--accent);">
               <div class="add-photo-btn" id="useThisFrameBtn" style="text-align:center; margin-top:8px;">
                 <span id="txtUseThisFrame">Bu kareyi kapak yap</span>
@@ -848,7 +853,7 @@
         <div class="upload-step-sub" id="shipOriginSub" style="margin-bottom:16px;">Ürünlerin nereden gönderileceğini alıcılar üstün körü görsün. İl/ilçe yeterli, açık adres gerekmiyor.</div>
         <label class="auth-field-label" id="shipOriginIlLabel">İl</label>
         <select class="auth-input" id="shipOriginIl">
-          <option value="" id="shipOriginIlPlaceholder">İl seç</option>
+          <option value="" id="shipOriginIlPlaceholder" disabled selected>İl seç</option>
         </select>
         <label class="auth-field-label" id="shipOriginIlceLabel">İlçe</label>
         <select class="auth-input" id="shipOriginIlce" disabled>
@@ -1278,9 +1283,10 @@ const STATIC_TEXT = {
   cancelDiscountBtn: ['Vazgeç','Cancel'], saveDiscountBtn: ['Uygula','Apply'], removeDiscountBtn: ['İndirimi Kaldır','Remove Discount'],
   txtSellerReviewsLabel: ['Değerlendirmeler','Reviews'],
   uploadStep1Title: ['Tanıtım Videosu','Promo Video'], uploadStep1Sub: ['Ürününü en iyi anlatan kısa bir video seç','Choose a short video that shows your product best'],
-  videoDropText: ['Video seçmek için dokun','Tap to choose a video'], videoDropSub: ['MP4, MOV — en fazla 60 sn','MP4, MOV — 60 sec max'],
-  videoDurationError: ['Bu video 60 saniyeden uzun görünüyor — 60 sn altı videolar akışta daha iyi performans gösterir.','This video looks longer than 60 seconds — videos under 60 sec tend to perform better in the feed.'],
+  videoDropText: ['Video seçmek için dokun','Tap to choose a video'], videoDropSub: ['MP4, MOV — en fazla 2 dk','MP4, MOV — 2 min max'],
+  videoDurationError: ['Lütfen 2 dakika veya daha kısa bir video seç.','Please choose a video that is 2 minutes or shorter.'],
   thumbPickerLabel: ['Kapak fotoğrafı için bir kare seç','Pick a frame for the cover photo'], txtUseThisFrame: ['Bu kareyi kapak yap','Use this frame as cover'],
+  txtPreviewPlay: ['Videoyu oynat','Play video'],
   videoError: ['Video yüklemediniz, lütfen devam etmeden önce bir video seç.','You have not uploaded a video — please pick one before continuing.'],
   uploadStep2Title: ['Ürün Bilgileri','Product Info'], uploadStep2Sub: ['Alıcıların göreceği başlık ve açıklama','The title and description buyers will see'],
   uploadNameLabel: ['Ürün Adı','Product Name'], nameError: ['Lütfen ürün adını gir.','Please enter a product name.'],
@@ -1296,6 +1302,7 @@ const STATIC_TEXT = {
   shipOriginSub: ['Ürünlerin nereden gönderileceğini alıcılar üstün körü görsün. İl/ilçe yeterli, açık adres gerekmiyor.','Let buyers get a rough idea where your products ship from. City/district is enough — no need for a full address.'],
   shipOriginIlLabel: ['İl','Province'], shipOriginIlceLabel: ['İlçe','District'],
   shipOriginIlPlaceholder: ['İl seç','Choose province'], shipOriginIlcePlaceholder: ['Önce il seç','Choose province first'],
+  shipOriginIlceReadyPlaceholder: ['İlçe seç','Choose district'],
   shipOriginError: ['Lütfen il ve ilçe gir.','Please enter both a province and district.'],
   shipOriginSaveBtn: ['Kaydet ve Devam Et','Save and Continue'],
   uploadShipOriginEdit: ['Değiştir','Change'],
@@ -1546,7 +1553,7 @@ function findProduct(id){ return products.find(p => p.id === id); }
 /* ---------- FEED ---------- */
 const feed = document.getElementById('feed');
 function unlockVideoSoundOnInteraction(){
-  document.querySelectorAll('.card-media-video').forEach(v => {
+  document.querySelectorAll('.card-media-video, #videoPreview').forEach(v => {
     if(v.muted){
       v.muted = false;
       if(!v.paused || (currentTab === 'feed' && openSheetName === null)) v.play().catch(() => {});
@@ -2437,6 +2444,32 @@ function setProfileAvatar(url){
   const btn = document.getElementById('profileAvatarBtn');
   btn.style.backgroundImage = `url('${url}')`;
   document.getElementById('profileAvatarInitials').style.display = 'none';
+  syncMyProductsWithProfile();
+}
+function syncMyProductsWithProfile(){
+  // A seller's own uploaded products should always show their current name/photo — not
+  // whatever they were called at the moment each product was published.
+  const fallbackAvatar = () => gradientAvatar(currentUser.initials, GRADIENT_PAIRS[0][0], GRADIENT_PAIRS[0][1]);
+  const liveAvatar = profileAvatarUrl || fallbackAvatar();
+  products.forEach(p => {
+    if(p.isMine){
+      p.seller = currentUser.name;
+      p.avatar = liveAvatar;
+      // Patch any already-rendered card in place instead of re-rendering the whole feed —
+      // a full rebuild would interrupt whatever video is currently playing.
+      const card = feed.querySelector(`.card[data-product-id="${p.id}"]`);
+      if(card){
+        const avatarEl = card.querySelector('.seller-avatar');
+        if(avatarEl) avatarEl.style.backgroundImage = `url('${p.avatar}')`;
+        const sellerLinkEl = card.querySelector('[data-role="sellerlink"] b');
+        if(sellerLinkEl) sellerLinkEl.textContent = `@${p.seller.replace(/\s+/g,'').toLowerCase()}`;
+      }
+      if(activeProduct === p && openSheetName === 'product'){
+        document.getElementById('sheetSeller').textContent = p.seller;
+      }
+    }
+  });
+  if(openSheetName === 'listings') renderListings();
 }
 
 document.getElementById('profileAvatarBtn').addEventListener('click', () => openSheetByName('avatar'));
@@ -3000,9 +3033,11 @@ function populateIlceSelect(il, selectedIlce){
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.id = 'shipOriginIlcePlaceholder';
+  placeholder.disabled = true;
   if(il && IL_ILCE_DATA[il]){
     ilceSelect.disabled = false;
-    placeholder.textContent = t('shipOriginIlcePlaceholder');
+    placeholder.textContent = STATIC_TEXT.shipOriginIlceReadyPlaceholder[currentLang === 'tr' ? 0 : 1];
+    placeholder.selected = true;
     ilceSelect.appendChild(placeholder);
     IL_ILCE_DATA[il].forEach(ilce => {
       const opt = document.createElement('option');
@@ -3081,6 +3116,7 @@ function openUploadScreen(){
 }
 function closeUploadScreen(){
   document.getElementById('uploadScreen').classList.add('hidden');
+  document.getElementById('videoPreview').pause();
   if(currentTab === 'feed') resumeVisibleFeedVideo();
 }
 document.getElementById('uploadFabBtn').addEventListener('click', () => requireAuth(openUploadScreen));
@@ -3088,6 +3124,7 @@ document.getElementById('uploadCloseBtn').addEventListener('click', closeUploadS
 
 function goToUploadStep(step){
   uploadStep = step;
+  if(step !== 1) document.getElementById('videoPreview').pause();
   document.querySelectorAll('.upload-step').forEach(s => s.classList.remove('active'));
   document.getElementById('uploadStep' + step).classList.add('active');
   document.querySelectorAll('.step-dot').forEach(d => {
@@ -3133,7 +3170,23 @@ document.getElementById('videoFileInput').addEventListener('change', (e) => {
 
   video.addEventListener('loadedmetadata', () => {
     const dur = isFinite(video.duration) ? video.duration : 0;
-    if(dur > 60) document.getElementById('videoDurationError').classList.add('show');
+    if(dur > 120){
+      // A confirmed duration over the limit is rejected outright — storing/serving long
+      // videos is expensive, so this one actually blocks (unlike the "duration unknown"
+      // case above, which stays accepted rather than risk wrongly blocking a valid video).
+      document.getElementById('videoDurationError').classList.add('show');
+      URL.revokeObjectURL(url);
+      uploadData.videoObjectUrl = null;
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      video.style.display = 'none';
+      document.getElementById('videoDropContent').style.display = 'flex';
+      document.getElementById('videoDropZone').classList.remove('filled');
+      document.getElementById('thumbPickerWrap').style.display = 'none';
+      document.getElementById('videoFileInput').value = '';
+      return;
+    }
     const slider = document.getElementById('thumbFrameSlider');
     slider.min = 0;
     slider.max = dur || 1;
@@ -3149,6 +3202,33 @@ document.getElementById('thumbFrameSlider').addEventListener('input', (e) => {
   const video = document.getElementById('videoPreview');
   video.pause();
   video.currentTime = Number(e.target.value);
+  setPreviewPlayBtnState(false);
+});
+function setPreviewPlayBtnState(isPlaying){
+  const icon = document.getElementById('previewPlayIcon');
+  const label = document.getElementById('txtPreviewPlay');
+  icon.innerHTML = isPlaying
+    ? '<rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/>'
+    : '<polygon points="6,4 20,12 6,20"/>';
+  label.textContent = isPlaying
+    ? (currentLang==='tr' ? 'Duraklat' : 'Pause')
+    : (currentLang==='tr' ? 'Videoyu oynat' : 'Play video');
+}
+document.getElementById('previewPlayBtn').addEventListener('click', () => {
+  const video = document.getElementById('videoPreview');
+  if(video.paused){
+    video.play().catch(() => {});
+    setPreviewPlayBtnState(true);
+  } else {
+    video.pause();
+    setPreviewPlayBtnState(false);
+  }
+});
+document.getElementById('videoPreview').addEventListener('pause', () => setPreviewPlayBtnState(false));
+document.getElementById('videoPreview').addEventListener('play', () => setPreviewPlayBtnState(true));
+document.getElementById('videoPreview').addEventListener('timeupdate', () => {
+  const video = document.getElementById('videoPreview');
+  if(!video.paused) document.getElementById('thumbFrameSlider').value = video.currentTime;
 });
 document.getElementById('useThisFrameBtn').addEventListener('click', () => {
   const video = document.getElementById('videoPreview');
@@ -3365,6 +3445,7 @@ function publishListingToFeed(listing){
     likes: 0, views: 0, shares: 0, videoUrl: listing.videoUrl || null,
     stock: listing.stock, createdAt: Date.now(), photos: listing.photos && listing.photos.length ? listing.photos : [listing.thumb || gradientThumb(fallbackPair[0], fallbackPair[1], 135)],
     shipOrigin: listing.shipOrigin,
+    isMine: true,
   };
   listing.publishedProductId = productData.id;
   products.push(productData);
@@ -3642,6 +3723,7 @@ document.getElementById('saveEditNameBtn').addEventListener('click', () => {
   currentUser.initials = initialsFromName(newName);
   document.getElementById('profileNameDisplay').textContent = newName;
   if(!profileAvatarUrl) document.getElementById('profileAvatarInitials').textContent = currentUser.initials;
+  syncMyProductsWithProfile();
   closeAllSheets();
   showToast(currentLang === 'tr' ? 'Adın güncellendi' : 'Name updated');
 });
